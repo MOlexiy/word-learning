@@ -1,0 +1,6 @@
+dist
+.angular
+node_modules
+apps/api/src/generated
+apps/api/prisma/migrations
+package-lock.json

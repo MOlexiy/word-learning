@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.angular
+**/out-tsc
+**/*.tsbuildinfo
+apps/api/src/generated
+**/.env
+.git
+.idea
+.vscode
+*.log

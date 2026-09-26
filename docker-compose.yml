@@ -1,0 +1,76 @@
+# Бекенд у Docker, фронт локально з hot-reload (за замовчуванням):
+#   docker compose up -d          → db + api (api доступний на http://localhost:3000/api)
+#   npm run dev:web               → http://localhost:4200 (dev-proxy /api → :3000)
+# Увесь застосунок у Docker, разом з фронтом у nginx:
+#   docker compose --profile web up -d --build   → http://localhost:${WEB_PORT:-8080}
+name: word-learning
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wl
+      POSTGRES_PASSWORD: wl
+      POSTGRES_DB: word_learning
+    ports:
+      - '5432:5432'
+    volumes:
+      - wl-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U wl -d word_learning']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      target: api
+    image: word-learning-api
+    restart: unless-stopped
+    # JWT-секрети беремо з того самого apps/api/.env, що й для локальної розробки.
+    env_file:
+      - path: apps/api/.env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      # Усередині мережі compose база доступна за іменем сервісу `db`.
+      DATABASE_URL: postgresql://wl:wl@db:5432/word_learning?schema=public
+      WEB_ORIGIN: ''
+    # Відкритий на хості, щоб dev-сервер Angular (npm run dev:web) проксіював /api сюди.
+    ports:
+      - '${API_PORT:-3000}:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      target: web
+    image: word-learning-web
+    # Опційний: стартує лише з `--profile web`.
+    profiles: ['web']
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-8080}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  wl-pgdata:

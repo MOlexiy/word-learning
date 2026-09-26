@@ -1,0 +1,91 @@
+// Prisma 7: URL підключення — у prisma.config.ts, клієнт генерується в src/generated/prisma.
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  student
+  teacher
+}
+
+enum TeacherStatus {
+  pending
+  accepted
+  rejected
+}
+
+model User {
+  username      String         @id @db.VarChar(32)
+  email         String         @unique @db.VarChar(254)
+  passwordHash  String         @map("password_hash")
+  role          Role
+  /// Для student: вчитель, якому надіслано заявку / який прийняв учня.
+  teacherId     String?        @map("teacher_id") @db.VarChar(32)
+  teacherStatus TeacherStatus? @map("teacher_status")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  teacher       User?          @relation("TeacherStudents", fields: [teacherId], references: [username], onDelete: SetNull, onUpdate: Cascade)
+  students      User[]         @relation("TeacherStudents")
+  cards         WordCard[]
+  refreshTokens RefreshToken[]
+
+  @@index([teacherId, teacherStatus])
+  @@map("users")
+}
+
+model WordCard {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.VarChar(32)
+  name         String   @db.VarChar(200)
+  means        String   @default("")
+  used         String   @default("")
+  n            String   @default("") @db.VarChar(200)
+  v            String   @default("") @db.VarChar(200)
+  adj          String   @default("") @db.VarChar(200)
+  adv          String   @default("") @db.VarChar(200)
+  collocations String   @default("")
+  topic        String[] @default([])
+  k            Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user     User                @relation(fields: [userId], references: [username], onDelete: Cascade, onUpdate: Cascade)
+  progress CardRandomProgress?
+
+  @@index([userId, name])
+  @@map("word_cards")
+}
+
+/// Стан інтервального рандому. Відсутній рядок = картка ще не випадала (крок 1, доступна).
+model CardRandomProgress {
+  cardId         String   @id @map("card_id") @db.Uuid
+  /// Крок, що буде застосовано при наступному випаданні: 1..6 (lock = 5 * n днів).
+  repetitionStep Int      @map("repetition_step") @db.SmallInt
+  lockedUntil    DateTime @map("locked_until") @db.Timestamptz(3)
+
+  card WordCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([lockedUntil])
+  @@map("card_random_progress")
+}
+
+/// Refresh-токени (JWT з jti). Зберігаємо для ротації, відкликання та виявлення повторного використання.
+model RefreshToken {
+  id           String    @id @db.Uuid
+  userId       String    @map("user_id") @db.VarChar(32)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(3)
+  replacedById String?   @map("replaced_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [username], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}

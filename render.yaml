@@ -1,0 +1,38 @@
+# Render Blueprint: бекенд (NestJS) з Dockerfile, ціль за замовчуванням — стадія `api`.
+# База — Neon (DATABASE_URL задається при створенні Blueprint у дашборді Render).
+services:
+  - type: web
+    name: wordloop-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    # Перезбирати API лише при змінах бекенду / спільної бібліотеки / залежностей.
+    buildFilter:
+      paths:
+        - apps/api/**
+        - libs/shared/**
+        - Dockerfile
+        - .dockerignore
+        - package.json
+        - package-lock.json
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Рядок підключення Neon (Direct connection, без pooler) — вставити при створенні.
+      - key: DATABASE_URL
+        sync: false
+      # Render згенерує випадкові 256-бітні значення при першому створенні.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: 'true'
+      # За проксі Render/Vercel: коректний IP клієнта для rate limit.
+      - key: TRUST_PROXY
+        value: 'true'

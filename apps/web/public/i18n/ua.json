@@ -1,0 +1,212 @@
+{
+  "app": {
+    "name": "WordLoop"
+  },
+  "lang": {
+    "label": "Мова інтерфейсу",
+    "ua": "UA",
+    "en": "EN",
+    "uaFull": "Українська",
+    "enFull": "English"
+  },
+  "nav": {
+    "random": "Рандомне слово",
+    "addCard": "Додати картку",
+    "guest": "Гість"
+  },
+  "titles": {
+    "cards": "Мої слова",
+    "newCard": "Нова картка",
+    "card": "Картка",
+    "profile": "Кабінет",
+    "studentCards": "Слова учня",
+    "studentCard": "Картка учня",
+    "login": "Вхід",
+    "register": "Реєстрація"
+  },
+  "common": {
+    "loading": "Завантаження…",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "close": "Закрити",
+    "search": "Пошук…",
+    "empty": "—"
+  },
+  "roles": {
+    "student": "Учень",
+    "teacher": "Вчитель"
+  },
+  "status": {
+    "pending": "очікує",
+    "accepted": "прийнято",
+    "rejected": "відхилено"
+  },
+  "cards": {
+    "fields": {
+      "means": "Значення / переклад",
+      "used": "Приклад вживання",
+      "n": "Іменник (n)",
+      "v": "Дієслово (v)",
+      "adj": "Прикметник (adj)",
+      "adv": "Прислівник (adv)",
+      "collocations": "Колокації"
+    },
+    "list": {
+      "title": "Мої слова",
+      "searchLabel": "Пошук слова",
+      "guestBanner": "Гостьовий режим: картки зберігаються лише в цьому браузері.",
+      "guestBannerCta": "Увійдіть",
+      "guestBannerTail": ", щоб працювати з даними з БД.",
+      "nothingFound": "Нічого не знайдено.",
+      "empty": "Карток ще немає.",
+      "addFirst": "+ Додати першу картку"
+    },
+    "create": {
+      "title": "Нова картка",
+      "submit": "Створити",
+      "created": "«{{name}}» додано"
+    },
+    "detail": {
+      "back": "← До каталогу",
+      "notFound": "Картку не знайдено.",
+      "toCatalog": "До каталогу",
+      "newTopic": "Новий параграф",
+      "newTopicPlaceholder": "Речення або абзац з цим словом",
+      "addTopic": "+ Додати параграф",
+      "edit": "✎ Редагувати",
+      "delete": "Видалити",
+      "confirmDelete": "Точно видалити?",
+      "saved": "Збережено",
+      "deleted": "Картку видалено"
+    },
+    "view": {
+      "viewsHint": "Скільки разів картку відкривали",
+      "topics": "Параграфи ({{count}})",
+      "noTopics": "Параграфів ще немає."
+    },
+    "form": {
+      "word": "Слово *",
+      "wordRequired": "Вкажіть слово",
+      "topicFirst": "Параграф (контекст зі словом)",
+      "topics": "Параграфи",
+      "addTopic": "+ Параграф",
+      "removeTopic": "Видалити параграф"
+    },
+    "random": {
+      "paused": "Усі картки на паузі. Наступна стане доступною {{date}}",
+      "empty": "Карток ще немає — додайте першу"
+    }
+  },
+  "auth": {
+    "sessionExpired": "Сесія завершилась — увійдіть знову",
+    "login": {
+      "title": "Вхід",
+      "login": "Username або email",
+      "password": "Пароль",
+      "submit": "Увійти",
+      "noAccount": "Немає акаунта?",
+      "register": "Зареєструватися",
+      "or": "або",
+      "continueAsGuest": "продовжити як гість",
+      "welcome": "Вітаємо, {{username}}!",
+      "guestCardsHint": "У браузері є гостьові картки — їх можна перенести в акаунт у профілі"
+    },
+    "register": {
+      "title": "Реєстрація",
+      "username": "Username",
+      "email": "Email",
+      "password": "Пароль (мін. 8 символів)",
+      "role": "Роль",
+      "submit": "Створити акаунт",
+      "haveAccount": "Вже є акаунт?",
+      "login": "Увійти",
+      "created": "Акаунт створено"
+    }
+  },
+  "profile": {
+    "title": "Особистий кабінет",
+    "username": "Username",
+    "email": "Email",
+    "role": "Роль",
+    "logout": "Вийти",
+    "guestText": "Ви в гостьовому режимі: застосунок працює повністю, але картки та інтервали зберігаються лише в LocalStorage цього браузера.",
+    "login": "Увійти",
+    "register": "Зареєструватися",
+    "student": {
+      "myTeacher": "Мій вчитель",
+      "resend": "Надіслати повторно",
+      "leave": "Відкріпитися",
+      "noTeacher": "Вчителя не обрано.",
+      "findTeacher": "Знайти вчителя за username",
+      "changeTeacher": "Змінити вчителя за username",
+      "searchPlaceholder": "Почніть вводити username…",
+      "sendRequest": "Надіслати запит",
+      "noResults": "Вчителів не знайдено.",
+      "requestSent": "Запит надіслано вчителю {{username}}"
+    },
+    "teacher": {
+      "requests": "Нові заявки ({{count}})",
+      "noRequests": "Нових заявок немає.",
+      "accept": "Прийняти",
+      "reject": "Відхилити",
+      "students": "Мої учні ({{count}})",
+      "noStudents": "Підтверджених учнів поки немає.",
+      "remove": "Відкріпити",
+      "accepted": "{{username}}: заявку прийнято",
+      "rejected": "Заявку відхилено",
+      "removed": "{{username}} відкріплено"
+    },
+    "import": {
+      "title": "Гостьові дані в цьому браузері",
+      "found": "Знайдено карток: {{count}}. Їх можна перенести в акаунт разом із таймерами рандому.",
+      "clearAfter": "Після перенесення видалити з браузера",
+      "submit": "Перенести в акаунт",
+      "discard": "Видалити локальні",
+      "done": "Перенесено карток: {{count}}"
+    }
+  },
+  "students": {
+    "back": "← До кабінету",
+    "title": "Слова учня {{username}}",
+    "random": "🎲 Рандомне слово учня",
+    "readonlyHint": "Режим перегляду: редагування недоступне, таймери учня не змінюються.",
+    "empty": "У учня ще немає карток.",
+    "backToStudent": "← Слова учня {{username}}",
+    "anotherRandom": "🎲 Інше рандомне слово",
+    "readonly": "Лише перегляд"
+  },
+  "validation": {
+    "usernameLength": "Username: від 3 до 32 символів",
+    "usernameFormat": "Username: лише латиниця, цифри та _ . -",
+    "email": "Некоректний email",
+    "passwordLength": "Пароль: від 8 до 128 символів",
+    "loginRequired": "Вкажіть username або email",
+    "passwordRequired": "Вкажіть пароль",
+    "nameRequired": "Вкажіть слово",
+    "topicEmpty": "Параграф не може бути порожнім"
+  },
+  "errors": {
+    "network": "Сервер недоступний. Перевірте, чи запущено API.",
+    "unknown": "Щось пішло не так",
+    "storageUnavailable": "Не вдалося зберегти в LocalStorage (приватний режим або переповнене сховище)",
+    "AUTH_REQUIRED": "Потрібна авторизація",
+    "ACCESS_TOKEN_INVALID": "Сесія недійсна або прострочена",
+    "REFRESH_TOKEN_MISSING": "Сесію не знайдено — увійдіть знову",
+    "REFRESH_TOKEN_INVALID": "Сесія завершилась — увійдіть знову",
+    "REFRESH_TOKEN_REUSED": "Сесію відкликано з міркувань безпеки — увійдіть знову",
+    "INVALID_CREDENTIALS": "Невірний логін або пароль",
+    "USERNAME_TAKEN": "Цей username уже зайнятий",
+    "EMAIL_TAKEN": "Цей email уже зареєстрований",
+    "FORBIDDEN_ROLE": "Недостатньо прав для цієї дії",
+    "TOO_MANY_REQUESTS": "Забагато спроб. Зачекайте хвилину і спробуйте знову",
+    "VALIDATION_FAILED": "Перевірте правильність заповнення полів",
+    "CARD_NOT_FOUND": "Картку не знайдено",
+    "TEACHER_NOT_FOUND": "Вчителя з таким username не знайдено",
+    "TEACHER_ALREADY_ACCEPTED": "Цей вчитель уже прийняв вашу заявку",
+    "REQUEST_NOT_FOUND": "Заявку або учня не знайдено",
+    "STUDENT_NOT_ACCEPTED": "Цей учень не входить до ваших підтверджених учнів",
+    "CONFLICT": "Запис з такими даними вже існує",
+    "NOT_FOUND": "Не знайдено",
+    "INTERNAL": "Внутрішня помилка сервера"
+  }
+}

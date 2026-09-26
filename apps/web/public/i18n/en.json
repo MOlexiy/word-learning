@@ -1,0 +1,212 @@
+{
+  "app": {
+    "name": "WordLoop"
+  },
+  "lang": {
+    "label": "Interface language",
+    "ua": "UA",
+    "en": "EN",
+    "uaFull": "Українська",
+    "enFull": "English"
+  },
+  "nav": {
+    "random": "Random word",
+    "addCard": "Add card",
+    "guest": "Guest"
+  },
+  "titles": {
+    "cards": "My words",
+    "newCard": "New card",
+    "card": "Card",
+    "profile": "Profile",
+    "studentCards": "Student's words",
+    "studentCard": "Student's card",
+    "login": "Sign in",
+    "register": "Sign up"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "search": "Search…",
+    "empty": "—"
+  },
+  "roles": {
+    "student": "Student",
+    "teacher": "Teacher"
+  },
+  "status": {
+    "pending": "pending",
+    "accepted": "accepted",
+    "rejected": "rejected"
+  },
+  "cards": {
+    "fields": {
+      "means": "Meaning / translation",
+      "used": "Usage example",
+      "n": "Noun (n)",
+      "v": "Verb (v)",
+      "adj": "Adjective (adj)",
+      "adv": "Adverb (adv)",
+      "collocations": "Collocations"
+    },
+    "list": {
+      "title": "My words",
+      "searchLabel": "Search for a word",
+      "guestBanner": "Guest mode: cards are stored only in this browser.",
+      "guestBannerCta": "Sign in",
+      "guestBannerTail": " to keep your data in the database.",
+      "nothingFound": "Nothing found.",
+      "empty": "No cards yet.",
+      "addFirst": "+ Add your first card"
+    },
+    "create": {
+      "title": "New card",
+      "submit": "Create",
+      "created": "“{{name}}” added"
+    },
+    "detail": {
+      "back": "← Back to catalog",
+      "notFound": "Card not found.",
+      "toCatalog": "Back to catalog",
+      "newTopic": "New paragraph",
+      "newTopicPlaceholder": "A sentence or paragraph with this word",
+      "addTopic": "+ Add paragraph",
+      "edit": "✎ Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete for sure?",
+      "saved": "Saved",
+      "deleted": "Card deleted"
+    },
+    "view": {
+      "viewsHint": "How many times the card was opened",
+      "topics": "Paragraphs ({{count}})",
+      "noTopics": "No paragraphs yet."
+    },
+    "form": {
+      "word": "Word *",
+      "wordRequired": "Enter a word",
+      "topicFirst": "Paragraph (context with the word)",
+      "topics": "Paragraphs",
+      "addTopic": "+ Paragraph",
+      "removeTopic": "Remove paragraph"
+    },
+    "random": {
+      "paused": "All cards are on pause. The next one becomes available {{date}}",
+      "empty": "No cards yet — add your first one"
+    }
+  },
+  "auth": {
+    "sessionExpired": "Your session has ended — please sign in again",
+    "login": {
+      "title": "Sign in",
+      "login": "Username or email",
+      "password": "Password",
+      "submit": "Sign in",
+      "noAccount": "No account?",
+      "register": "Sign up",
+      "or": "or",
+      "continueAsGuest": "continue as a guest",
+      "welcome": "Welcome, {{username}}!",
+      "guestCardsHint": "This browser has guest cards — you can move them to your account on the profile page"
+    },
+    "register": {
+      "title": "Sign up",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password (min. 8 characters)",
+      "role": "Role",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "login": "Sign in",
+      "created": "Account created"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "logout": "Sign out",
+    "guestText": "You are in guest mode: the app is fully functional, but cards and intervals are stored only in this browser's LocalStorage.",
+    "login": "Sign in",
+    "register": "Sign up",
+    "student": {
+      "myTeacher": "My teacher",
+      "resend": "Send again",
+      "leave": "Leave teacher",
+      "noTeacher": "No teacher selected.",
+      "findTeacher": "Find a teacher by username",
+      "changeTeacher": "Change teacher by username",
+      "searchPlaceholder": "Start typing a username…",
+      "sendRequest": "Send request",
+      "noResults": "No teachers found.",
+      "requestSent": "Request sent to {{username}}"
+    },
+    "teacher": {
+      "requests": "New requests ({{count}})",
+      "noRequests": "No new requests.",
+      "accept": "Accept",
+      "reject": "Reject",
+      "students": "My students ({{count}})",
+      "noStudents": "No confirmed students yet.",
+      "remove": "Remove",
+      "accepted": "{{username}}: request accepted",
+      "rejected": "Request rejected",
+      "removed": "{{username}} removed"
+    },
+    "import": {
+      "title": "Guest data in this browser",
+      "found": "Cards found: {{count}}. You can move them to your account together with their random timers.",
+      "clearAfter": "Remove from this browser after moving",
+      "submit": "Move to account",
+      "discard": "Delete local cards",
+      "done": "Cards moved: {{count}}"
+    }
+  },
+  "students": {
+    "back": "← Back to profile",
+    "title": "{{username}}'s words",
+    "random": "🎲 Student's random word",
+    "readonlyHint": "View mode: editing is disabled and the student's timers are not changed.",
+    "empty": "This student has no cards yet.",
+    "backToStudent": "← {{username}}'s words",
+    "anotherRandom": "🎲 Another random word",
+    "readonly": "Read-only"
+  },
+  "validation": {
+    "usernameLength": "Username: 3 to 32 characters",
+    "usernameFormat": "Username: Latin letters, digits and _ . - only",
+    "email": "Invalid email",
+    "passwordLength": "Password: 8 to 128 characters",
+    "loginRequired": "Enter a username or email",
+    "passwordRequired": "Enter a password",
+    "nameRequired": "Enter a word",
+    "topicEmpty": "A paragraph cannot be empty"
+  },
+  "errors": {
+    "network": "Server is unavailable. Check that the API is running.",
+    "unknown": "Something went wrong",
+    "storageUnavailable": "Could not save to LocalStorage (private mode or storage is full)",
+    "AUTH_REQUIRED": "Authentication required",
+    "ACCESS_TOKEN_INVALID": "Session is invalid or expired",
+    "REFRESH_TOKEN_MISSING": "No session found — please sign in again",
+    "REFRESH_TOKEN_INVALID": "Your session has ended — please sign in again",
+    "REFRESH_TOKEN_REUSED": "Session revoked for security reasons — please sign in again",
+    "INVALID_CREDENTIALS": "Invalid login or password",
+    "USERNAME_TAKEN": "This username is already taken",
+    "EMAIL_TAKEN": "This email is already registered",
+    "FORBIDDEN_ROLE": "You don't have permission for this action",
+    "TOO_MANY_REQUESTS": "Too many attempts. Please wait a minute and try again",
+    "VALIDATION_FAILED": "Please check the form fields",
+    "CARD_NOT_FOUND": "Card not found",
+    "TEACHER_NOT_FOUND": "No teacher with this username",
+    "TEACHER_ALREADY_ACCEPTED": "This teacher has already accepted your request",
+    "REQUEST_NOT_FOUND": "Request or student not found",
+    "STUDENT_NOT_ACCEPTED": "This student is not among your confirmed students",
+    "CONFLICT": "A record with this data already exists",
+    "NOT_FOUND": "Not found",
+    "INTERNAL": "Internal server error"
+  }
+}
