@@ -343,9 +343,13 @@ a {
 .add-topic {
   display: grid;
   gap: 8px;
-  justify-items: start;
   border-top: 1px dashed var(--border);
   padding-top: 16px;
+}
+/* Поля — на всю ширину, кнопки — за своїм вмістом. */
+.add-topic > .btn,
+.field > .btn {
+  justify-self: start;
 }
 
 /* ---------- Alerts, badges, lists ---------- */

@@ -1,6 +1,6 @@
 # Бекенд у Docker, фронт локально з hot-reload (за замовчуванням):
 #   docker compose up -d          → db + api (api доступний на http://localhost:3000/api)
-#   npm run dev:web               → http://localhost:4200 (dev-proxy /api → :3000)
+#   npm run dev:web               → http://localhost:4200 (dev-proxy /api → 127.0.0.1:3000)
 # Увесь застосунок у Docker, разом з фронтом у nginx:
 #   docker compose --profile web up -d --build   → http://localhost:${WEB_PORT:-8080}
 name: word-learning

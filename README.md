@@ -14,11 +14,11 @@ Monorepo (npm workspaces): **Angular 21** (standalone, signals, zoneless) + **Ne
 - **Двомовний інтерфейс** UA / EN.
 - Авторизація через HttpOnly-куки з автоматичним оновленням токенів і обмеженням спроб входу.
 
-| Середовище | Адреса                                                                       |
-| ---------- | ---------------------------------------------------------------------------- |
-| Продакшн   | https://word-learning-phi.vercel.app (фронт на Vercel, `/api` → Render)      |
-| API        | https://wordloop-api.onrender.com/api (перевірка: `/api/health`)             |
-| Локально   | http://localhost:4200 (`npm run dev:web`) або http://localhost:9000 (Docker) |
+| Середовище | Адреса                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| Продакшн   | https://word-learning-phi.vercel.app (фронт на Vercel, `/api` → Render)                       |
+| API        | https://wordloop-api.onrender.com/api (перевірка: `/api/health`)                              |
+| Локально   | http://localhost:4200 (`npm run dev:web`) або http://localhost:9000 (Docker, `--profile web`) |
 
 > Безкоштовний тариф Render: після 15 хв без запитів API засинає, і перший запит чекає близько хвилини. Гостьовий режим працює завжди.
 
