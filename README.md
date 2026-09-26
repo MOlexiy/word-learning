@@ -1,7 +1,26 @@
 # WordLoop — вивчення англійських слів з інтервальним рандомом
 
+**🌐 Live: [word-learning-phi.vercel.app](https://word-learning-phi.vercel.app/)**
+
 Monorepo (npm workspaces): **Angular 21** (standalone, signals, zoneless) + **NestJS 11** (модульна Clean Architecture) + **PostgreSQL** (Prisma 7).
 Спільні типи, Zod-схеми та алгоритм рандому живуть в одній бібліотеці `@wl/shared`, тож фронт (гостьовий режим) і бек (БД) рахують таймери однаково.
+
+## Можливості
+
+- Картки слів: значення, приклад, форми (n / v / adj / adv), колокації, параграфи-контексти, лічильник відкриттів `k`.
+- **Інтервальний рандом:** картка, що випала, блокується на 5·n днів (5, 10 … 30), потім цикл починається знову.
+- **Гостьовий режим** без реєстрації: усе зберігається в LocalStorage; після входу картки разом з таймерами переносяться в акаунт.
+- Ролі **учень / вчитель:** заявки, прийняття, відкріплення; вчитель переглядає картки учня лише для читання.
+- **Двомовний інтерфейс** UA / EN.
+- Авторизація через HttpOnly-куки з автоматичним оновленням токенів і обмеженням спроб входу.
+
+| Середовище | Адреса                                                                       |
+| ---------- | ---------------------------------------------------------------------------- |
+| Продакшн   | https://word-learning-phi.vercel.app (фронт на Vercel, `/api` → Render)      |
+| API        | https://wordloop-api.onrender.com/api (перевірка: `/api/health`)             |
+| Локально   | http://localhost:4200 (`npm run dev:web`) або http://localhost:9000 (Docker) |
+
+> Безкоштовний тариф Render: після 15 хв без запитів API засинає, і перший запит чекає близько хвилини. Гостьовий режим працює завжди.
 
 ## Швидкий старт
 
@@ -61,10 +80,12 @@ npm run dev:web                  # http://localhost:4200 (proxy /api → :3000)
 
 ```bash
 npm test             # unit-тести рандому/схем + повнота перекладів (i18n:check)
-npm run test:smoke   # 19 наскрізних перевірок API (потрібен запущений API)
+npm run test:smoke   # 19 наскрізних перевірок API (потрібен запущений API; API_URL=… для іншої адреси)
 npm run lint         # ESLint 10 flat config (typescript-eslint + angular-eslint)
 npm run build        # shared → api → web
 ```
+
+Додаткові перевірки smoke-тесту вмикаються змінними: `SMOKE_SLOW=1` (повторне використання refresh-токена через 10 с), `SMOKE_THROTTLE=1` (ліміт спроб входу; вичерпує його на хвилину).
 
 ## 1. Структура проєкту
 
@@ -83,7 +104,7 @@ word-learning/
 │     ├─ config/                     валідація .env через Zod
 │     ├─ infrastructure/prisma/      PrismaService (driver adapter pg)
 │     ├─ infrastructure/health/      GET /api/health (для Docker healthcheck)
-│     ├─ common/                     guards/decorators, Clock, ApiException, Zod-pipe
+│     ├─ common/                     guards/decorators, Clock, ApiException, Zod-pipe, rate limit
 │     └─ modules/
 │        ├─ auth/                    JWT у куках, ротація refresh-токенів
 │        ├─ users/                   профіль, зв'язок учень ↔ вчитель
@@ -109,9 +130,11 @@ word-learning/
 │     │  ├─ profile/                 кабінет, панелі учня/вчителя, імпорт гостьових карток
 │     │  └─ students/                картки учня для вчителя (read-only)
 │     └─ layout/header.component.ts
-├─ Dockerfile                        цілі `api` і `web` (multi-stage)
+├─ Dockerfile                        цілі `web` і `api` (multi-stage; `api` — за замовчуванням)
 ├─ docker/nginx.conf                 SPA + reverse proxy /api
-└─ docker-compose.yml                db → api → web
+├─ docker-compose.yml                db → api (+ web з профілем `web`)
+├─ render.yaml                       Render Blueprint для API
+└─ vercel.json                       збірка фронту + проксі /api на Render
 ```
 
 Залежності модулів API йдуть в один бік: `presentation → application → domain ← infrastructure`. Application-шар працює з портами (`CardsRepository`, `UsersRepository`, `RefreshTokenRepository`, `Clock`), Prisma — лише в infrastructure.
@@ -201,6 +224,7 @@ teacher DELETE students/:u          accepted → rejected («Відкріпит�
 | POST           | `/api/teacher/requests/:u/accept` · `/reject`            | teacher                           |
 | DELETE         | `/api/teacher/students/:u`                               | teacher                           |
 | GET            | `/api/teacher/students/:u/cards[/:id]`                   | read-only картки учня             |
+| GET            | `/api/health`                                            | стан API і БД (публічний)         |
 
 ## 5. Що варто знати
 
@@ -208,15 +232,18 @@ teacher DELETE students/:u          accepted → rejected («Відкріпит�
 - **Міграцію написано вручну** в тому форматі, який генерує Prisma (у середовищі розробки був недоступний бінарник schema-engine). Її застосовано й перевірено на PostgreSQL 17. Якщо `prisma migrate dev` запропонує невеликий diff, це косметика.
 - **`k` не редагується** через форму: це службовий лічильник. Вчитель, відкриваючи картку учня, `k` не збільшує.
 - **«Рандомне слово учня»** обирається на фронті з уже завантаженого списку і нічого не записує.
-- Для проду варто додати rate limiting на `/api/auth/*` (`@nestjs/throttler`) і cron для чистки прострочених refresh-токенів (зараз вони чистяться при старті).
+- Прострочені refresh-токени чистяться при старті API; при зростанні навантаження варто винести це в cron.
+- Rate limit (`@nestjs/throttler`) зберігає лічильники в пам'яті — для кількох інстансів API потрібне спільне сховище (Redis).
 - Без dev-proxy (фронт на іншому origin) задайте `WEB_ORIGIN`. Але з `SameSite=Strict` фронт і API мають бути на одному сайті.
 - **Docker і `COOKIE_SECURE=true`:** браузери приймають Secure-куки на `http://localhost`, але не на `http://<IP-адреса>`. Якщо відкриваєте застосунок з іншого пристрою в мережі без HTTPS, поставте `COOKIE_SECURE=false` у `.env` (лише для локальної мережі) або налаштуйте HTTPS.
 - Образ `api` містить усі `node_modules` монорепо (разом із dev-залежностями), тому важить кілька сотень МБ. Для проду варто зробити окремий `npm ci --omit=dev` лише для API.
 
 ## 6. Деплой: Vercel (фронт) + Render (API) + Neon (PostgreSQL)
 
+Поточний продакшн: **https://word-learning-phi.vercel.app** → API `https://wordloop-api.onrender.com` → Neon (Frankfurt).
+
 ```
-Браузер → https://<проєкт>.vercel.app
+Браузер → https://word-learning-phi.vercel.app
             ├─ статика Angular (Vercel CDN)
             └─ /api/*  →  rewrite (проксі) → https://wordloop-api.onrender.com/api/*  →  Neon Postgres
 ```
@@ -239,8 +266,11 @@ teacher DELETE students/:u          accepted → rejected («Відкріпит�
 
 ### Крок 3. Vercel — фронт
 
-1. **Add New → Project** → імпортуйте той самий репозиторій. Root Directory — корінь репозиторію (за замовчуванням); налаштування збірки беруться з `vercel.json`.
-2. **Deploy** → відкрийте `https://<проєкт>.vercel.app`.
+1. **Add New → Project** → імпортуйте той самий репозиторій.
+2. **Root Directory** — корінь репозиторію (`./`). Vercel може сам запропонувати `apps/api` з пресетом NestJS — змініть на корінь.
+3. **Application Preset** — Other (у `vercel.json` стоїть `"framework": null`, він має пріоритет). **Build and Output Settings** не чіпайте — беруться з `vercel.json`.
+4. **Environment Variables** не потрібні: якщо Vercel «знайшов» змінні з `apps/api/.env.example`, видаліть їх.
+5. **Deploy** → сайт буде на `https://<проєкт>.vercel.app` (у нас — https://word-learning-phi.vercel.app).
 
 ### Як це працює далі
 
