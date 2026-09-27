@@ -27,6 +27,8 @@ import { CardGridComponent } from '../ui/card-grid.component';
       <input
         class="input search"
         type="search"
+        id="card-search"
+        name="cardSearch"
         [placeholder]="'common.search' | transloco"
         [attr.aria-label]="'cards.list.searchLabel' | transloco"
         [value]="query()"

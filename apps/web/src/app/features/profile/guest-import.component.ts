@@ -17,6 +17,8 @@ import { CardStorageService } from '../cards/data/card-storage.service';
         <label class="checkbox">
           <input
             type="checkbox"
+            id="guest-import-clear"
+            name="clearAfter"
             [checked]="clearAfter()"
             (change)="clearAfter.set($any($event.target).checked)"
           />

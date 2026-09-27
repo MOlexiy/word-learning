@@ -17,11 +17,24 @@ import { CardStorageService } from '../cards/data/card-storage.service';
       <form class="stack" [formGroup]="form" (ngSubmit)="submit()">
         <label class="field">
           <span class="field__label">{{ 'auth.login.login' | transloco }}</span>
-          <input class="input" formControlName="login" autocomplete="username" />
+          <input
+            class="input"
+            id="login-login"
+            name="login"
+            formControlName="login"
+            autocomplete="username"
+          />
         </label>
         <label class="field">
           <span class="field__label">{{ 'auth.login.password' | transloco }}</span>
-          <input class="input" type="password" formControlName="password" autocomplete="current-password" />
+          <input
+            class="input"
+            type="password"
+            id="login-password"
+            name="password"
+            formControlName="password"
+            autocomplete="current-password"
+          />
         </label>
         @if (errorText()) {
           <p class="alert alert--error">{{ errorText() }}</p>

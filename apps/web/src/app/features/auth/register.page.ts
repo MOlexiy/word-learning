@@ -17,25 +17,57 @@ import { NotifyService } from '../../core/notify/notify.service';
       <form class="stack" [formGroup]="form" (ngSubmit)="submit()">
         <label class="field">
           <span class="field__label">{{ 'auth.register.username' | transloco }}</span>
-          <input class="input" formControlName="username" autocomplete="username" />
+          <input
+            class="input"
+            id="register-username"
+            name="username"
+            formControlName="username"
+            autocomplete="username"
+          />
         </label>
         <label class="field">
           <span class="field__label">{{ 'auth.register.email' | transloco }}</span>
-          <input class="input" type="email" formControlName="email" autocomplete="email" />
+          <input
+            class="input"
+            type="email"
+            id="register-email"
+            name="email"
+            formControlName="email"
+            autocomplete="email"
+          />
         </label>
         <label class="field">
           <span class="field__label">{{ 'auth.register.password' | transloco }}</span>
-          <input class="input" type="password" formControlName="password" autocomplete="new-password" />
+          <input
+            class="input"
+            type="password"
+            id="register-password"
+            name="password"
+            formControlName="password"
+            autocomplete="new-password"
+          />
         </label>
         <fieldset class="field">
           <legend class="field__label">{{ 'auth.register.role' | transloco }}</legend>
           <div class="segmented">
             <label
-              ><input type="radio" formControlName="role" value="student" />
+              ><input
+                type="radio"
+                id="register-role-student"
+                name="role"
+                formControlName="role"
+                value="student"
+              />
               {{ 'roles.student' | transloco }}</label
             >
             <label
-              ><input type="radio" formControlName="role" value="teacher" />
+              ><input
+                type="radio"
+                id="register-role-teacher"
+                name="role"
+                formControlName="role"
+                value="teacher"
+              />
               {{ 'roles.teacher' | transloco }}</label
             >
           </div>

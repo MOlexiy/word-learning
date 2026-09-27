@@ -43,6 +43,8 @@ import { StatusBadgeComponent } from './status-badge.component';
         <input
           class="input"
           type="search"
+          id="teacher-search"
+          name="teacherSearch"
           [placeholder]="'profile.student.searchPlaceholder' | transloco"
           [value]="query()"
           (input)="query.set($any($event.target).value)"
