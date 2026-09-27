@@ -7,16 +7,19 @@ export interface CardFieldMeta {
   /** i18n-ключ підпису. */
   labelKey: `cards.fields.${CardTextField}`;
   multiline: boolean;
+  /** Англійський текст, який має сенс озвучувати (переклад `means` — ні). */
+  speakable: boolean;
 }
 
-const field = (key: CardTextField, multiline: boolean): CardFieldMeta => ({
+const field = (key: CardTextField, multiline: boolean, speakable = true): CardFieldMeta => ({
   key,
   labelKey: `cards.fields.${key}`,
   multiline,
+  speakable,
 });
 
 export const CARD_TEXT_FIELDS: readonly CardFieldMeta[] = [
-  field('means', true),
+  field('means', true, false),
   field('used', true),
   field('n', false),
   field('v', false),

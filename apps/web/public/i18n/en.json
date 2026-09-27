@@ -97,6 +97,15 @@
       "empty": "No cards yet — add your first one"
     }
   },
+  "speech": {
+    "play": "Listen",
+    "stop": "Stop",
+    "speakSelection": "Speak selection",
+    "selectionHint": "Select a word or sentence in the text (or double-click a word) to hear just that part.",
+    "settings": "Pronunciation settings",
+    "accent": "Accent",
+    "rate": "Speed"
+  },
   "auth": {
     "sessionExpired": "Your session has ended — please sign in again",
     "login": {

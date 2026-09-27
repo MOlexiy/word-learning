@@ -541,3 +541,102 @@ a {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* ---------- Speech (озвучка) ---------- */
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.speak-btn:hover {
+  border-color: var(--primary);
+}
+.speak-btn.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
+.speak-btn:focus-visible,
+.chip:focus-visible,
+.selection-speaker:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.card-view__head .speak-btn {
+  align-self: center;
+}
+dd.speakable {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.topics__item > .speak-btn {
+  margin-right: 8px;
+  width: 28px;
+  height: 28px;
+  font-size: 0.85rem;
+}
+.spoken-word {
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+.hint {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+.speech-settings {
+  display: inline-flex;
+  gap: 6px;
+  align-self: center;
+}
+.chip {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--primary);
+}
+.selection-speaker {
+  position: fixed;
+  z-index: 50;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+  cursor: pointer;
+  white-space: nowrap;
+}
