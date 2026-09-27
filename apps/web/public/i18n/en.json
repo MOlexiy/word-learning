@@ -130,6 +130,7 @@
   },
   "auth": {
     "sessionExpired": "Your session has ended — please sign in again",
+    "restoreFailed": "Couldn't reach the server, so you're in guest mode for now. Reload the page in a minute to get back to your account.",
     "login": {
       "title": "Sign in",
       "login": "Username or email",
@@ -216,8 +217,15 @@
     "nameRequired": "Enter a word",
     "topicEmpty": "A paragraph cannot be empty"
   },
+  "server": {
+    "waking": {
+      "title": "Waking up the server…",
+      "hint": "Free hosting puts the API to sleep after 15 minutes of inactivity, so the first request takes up to a minute.",
+      "elapsed": "{{seconds}} s"
+    }
+  },
   "errors": {
-    "network": "Server is unavailable. Check that the API is running.",
+    "network": "Server is unavailable — it may still be waking up. Try again in a minute.",
     "unknown": "Something went wrong",
     "storageUnavailable": "Could not save to LocalStorage (private mode or storage is full)",
     "AUTH_REQUIRED": "Authentication required",

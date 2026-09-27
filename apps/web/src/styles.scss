@@ -815,3 +815,104 @@ dd.speakable {
   display: grid;
   gap: 10px;
 }
+
+/* ---------- Server wake-up (холодний старт бекенда) ---------- */
+.spinner {
+  flex: none;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.spinner--lg {
+  width: 36px;
+  height: 36px;
+  border-width: 3px;
+  color: var(--primary);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Заставка в index.html: спінер — через 0.4 с (швидкий старт не блимає), текст — через 2.5 с. */
+.boot {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 20px;
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--font);
+}
+.boot .spinner {
+  opacity: 0;
+  animation:
+    spin 0.8s linear infinite,
+    fade-in 0.2s 0.4s forwards;
+}
+.boot__slow {
+  max-width: 420px;
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0;
+  animation: fade-in 0.3s 2.5s forwards;
+}
+.boot__slow strong {
+  color: var(--text);
+}
+html:not([lang='en']) .boot__slow[lang='en'],
+html[lang='en'] .boot__slow[lang='uk'] {
+  display: none;
+}
+
+/* Банер під хедером, поки запит до API чекає на сервер. Не блокує інтерфейс. */
+.wake-banner {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  animation: fade-in 0.2s;
+}
+.wake-banner .spinner {
+  color: var(--primary);
+}
+.wake-banner__time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .boot .spinner {
+    animation-duration: 2.4s;
+  }
+}

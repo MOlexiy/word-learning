@@ -7,8 +7,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+      // Мова заставки до старту Angular — та сама логіка, що в LanguageService.
+      (function () {
+        var lang;
+        try {
+          lang = JSON.parse(localStorage.getItem('wl.lang') || 'null');
+        } catch (e) {}
+        if (lang !== 'ua' && lang !== 'en') {
+          var langs = navigator.languages || [];
+          var has = function (p) {
+            return langs.some(function (l) {
+              return l.toLowerCase().indexOf(p) === 0;
+            });
+          };
+          lang = has('uk') ? 'ua' : has('en') ? 'en' : 'ua';
+        }
+        document.documentElement.lang = lang === 'en' ? 'en' : 'uk';
+      })();
+    </script>
   </head>
   <body>
-    <wl-root></wl-root>
+    <wl-root>
+      <!-- Заставка до першого рендеру (Angular її замінить). Текст про сервер з'являється, лише якщо старт затягнувся. -->
+      <div class="boot" role="status" aria-live="polite">
+        <span class="spinner spinner--lg" aria-hidden="true"></span>
+        <p class="boot__slow" lang="uk">
+          <strong>Прокидаємо сервер…</strong><br />
+          Безкоштовний хостинг присипляє API після 15 хв простою, тож перший запуск триває до хвилини.
+        </p>
+        <p class="boot__slow" lang="en">
+          <strong>Waking up the server…</strong><br />
+          Free hosting puts the API to sleep after 15 minutes of inactivity, so the first start takes up to a
+          minute.
+        </p>
+      </div>
+    </wl-root>
   </body>
 </html>

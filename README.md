@@ -191,7 +191,7 @@ The library is [Transloco](https://jsverse.gitbook.io/transloco) (`@jsverse/tran
 - `LanguageService` loads the dictionary before the first render (no "flicker" of raw keys), sets `<html lang="uk|en">`, the locale for `Intl` (dates in toasts) and the Zod locale.
 - **Templates:** `{{ 'cards.list.title' | transloco }}`, with parameters — `{{ 'cards.view.topics' | transloco: { count: n } }}`; in TS — `TranslocoService.translate()`.
 - **Tab titles:** `title` in routes is an i18n key; `TranslatedTitleStrategy` translates it and updates it when the language changes.
-- **API errors:** the backend returns `{ statusCode, code, message }` (codes in `@wl/shared/api-errors.ts`, `message` in English for logs); `ErrorTranslator` shows `errors.<code>`. If the API is unreachable, it shows "Server unavailable".
+- **API errors:** the backend returns `{ statusCode, code, message }` (codes in `@wl/shared/api-errors.ts`, `message` in English for logs); `ErrorTranslator` shows `errors.<code>`. If the API is unreachable, it shows "Server is unavailable".
 - **Validation:** custom messages in Zod schemas are `validation.*` keys; standard ones (min/max…) are localized by Zod itself (`z.config(uk()/en())`). Errors already shown on the page are re-translated when the language is switched: the `computed()` depends on the language signal.
 - **Adding a language:** a new `<lang>.json` + the code in `APP_LANGS` (`core/i18n/i18n.config.ts`) and in `LANGS` of the check script.
 - `npm run i18n:check -w @wl/web` (part of `npm test`) fails if a key is missing or a value is empty in one of the files, or if a key from the code, an API error code or a `validation.*` key is missing from the dictionary; unused keys are reported as warnings.
@@ -213,7 +213,7 @@ The browser's built-in `speechSynthesis`: no third-party services, keys or text 
 student PUT /profile/teacher        → pending   (can be repeated: same or a different teacher)
 teacher POST requests/:u/accept     pending  → accepted
 teacher POST requests/:u/reject     pending  → rejected
-teacher DELETE students/:u          accepted → rejected ("Unlink"; the student sees the status and can send a request again)
+teacher DELETE students/:u          accepted → rejected ("Remove"; the student sees the status and can send a request again)
 ```
 
 Transitions are atomic (`updateMany` with a condition on the current status). A teacher sees cards only of students with the `accepted` status.
@@ -288,7 +288,11 @@ From the browser's point of view, the frontend and API are on the same domain (`
 ### How it works from here
 
 - Every `git push` to `main` updates both the frontend and the API. Render rebuilds the API only when the backend changes (`buildFilter`); Vercel builds the frontend on every push.
-- **Render free tier:** the API goes to sleep after 15 minutes without requests and takes about a minute to wake up. The first request after a pause may get "Server unavailable"; a retry a minute later will go through. Guest mode always works.
+- **Render free tier:** the API goes to sleep after 15 minutes without requests and takes about a minute to wake up. The frontend smooths this over (`apps/web/src/app/core/server/`):
+  - a request that hangs for more than 2.5 s shows a non-blocking "Waking up the server…" banner with a seconds counter;
+  - GET requests that fail with 0/502/503/504 are retried with backoff for about 75 s (POST is not retried — it may already have run);
+  - guests start instantly without waiting for `/api/auth/me` (a `wl.session` hint in LocalStorage, since the cookies themselves are HttpOnly), and the server is warmed up in the background via `/api/health`, so it is usually awake by the time they sign in;
+  - a signed-in user sees a splash screen from `index.html` while the session is restored; if the server never responds, the app falls back to guest mode with a toast.
 - **Neon free tier:** 0.5 GB; the database sleeps after 5 minutes of inactivity and wakes up in a fraction of a second.
 - Sign-in and registration are limited to 10 attempts per minute per IP (`@nestjs/throttler`, a 429 response → "Too many attempts").
 - API environment variables on Render: `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `COOKIE_SECURE=true`, `TRUST_PROXY=true`, `NODE_ENV=production`.

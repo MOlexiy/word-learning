@@ -20,6 +20,7 @@ import { APP_LANGS, DEFAULT_LANG } from './core/i18n/i18n.config';
 import { LanguageService } from './core/i18n/language.service';
 import { TranslatedTitleStrategy } from './core/i18n/translated-title.strategy';
 import { TranslocoHttpLoader } from './core/i18n/transloco-http.loader';
+import { serverWakeInterceptor } from './core/server/server-wake.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -29,7 +30,7 @@ export const appConfig: ApplicationConfig = {
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
     ),
-    provideHttpClient(withFetch(), withInterceptors([authRefreshInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([serverWakeInterceptor, authRefreshInterceptor])),
     provideTransloco({
       config: {
         availableLangs: [...APP_LANGS],
