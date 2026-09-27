@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   computed,
   effect,
@@ -13,6 +14,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { type CardInput, cardInputSchema, type WordCard } from '@wl/shared';
+import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ErrorTranslator } from '../../../core/i18n/error-translator.service';
 import { CARD_TEXT_FIELDS } from './card-fields';
 import { CollocationLinksComponent } from './collocation-links.component';
@@ -31,7 +33,14 @@ import { CollocationLinksComponent } from './collocation-links.component';
     <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label class="field">
         <span class="field__label">{{ 'cards.form.word' | transloco }}</span>
-        <input class="input input--lg" formControlName="name" autocomplete="off" maxlength="200" />
+        <input
+          class="input input--lg"
+          id="card-name"
+          name="name"
+          formControlName="name"
+          autocomplete="off"
+          maxlength="200"
+        />
         @if (form.controls.name.touched && form.controls.name.invalid) {
           <span class="field__error">{{ 'cards.form.wordRequired' | transloco }}</span>
         }
@@ -73,7 +82,14 @@ import { CollocationLinksComponent } from './collocation-links.component';
         </legend>
         @for (control of form.controls.topic.controls; track $index; let i = $index) {
           <div class="topic-edit">
-            <textarea class="input" rows="3" [formControlName]="i"></textarea>
+            <textarea
+              class="input"
+              rows="3"
+              [id]="'card-topic-' + i"
+              [attr.name]="'topic-' + i"
+              [formControlName]="i"
+              [attr.aria-label]="('cards.form.topics' | transloco) + ' ' + (i + 1)"
+            ></textarea>
             @if (mode() === 'edit') {
               <button
                 type="button"
@@ -133,6 +149,8 @@ export class CardFormComponent {
 
   readonly #fb = inject(NonNullableFormBuilder);
   readonly #errors = inject(ErrorTranslator);
+  readonly #confirm = inject(ConfirmService);
+  readonly #cdr = inject(ChangeDetectorRef);
   protected readonly form = this.#fb.group({
     name: this.#fb.control('', [Validators.required, Validators.maxLength(200)]),
     means: this.#fb.control(''),
@@ -160,8 +178,21 @@ export class CardFormComponent {
     this.form.controls.topic.push(this.#fb.control(''));
   }
 
-  protected removeTopic(index: number): void {
+  /** Порожній параграф прибираємо одразу, заповнений — після підтвердження. Зберігається кнопкою «Зберегти». */
+  protected async removeTopic(index: number): Promise<void> {
+    const text = this.form.controls.topic.at(index)?.value.trim() ?? '';
+    if (text) {
+      const confirmed = await this.#confirm.ask({
+        titleKey: 'cards.detail.deleteTopicTitle',
+        messageKey: 'cards.form.removeTopicHint',
+        quote: text,
+        danger: true,
+      });
+      if (!confirmed) return;
+    }
     this.form.controls.topic.removeAt(index);
+    // Після await ми поза обробником події: без zone.js Angular сам не перемалює FormArray.
+    this.#cdr.markForCheck();
   }
 
   protected submit(): void {

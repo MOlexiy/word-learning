@@ -44,6 +44,10 @@ export class CardStorageService implements CardsRepository {
     return this.#repo().addTopic(id, text);
   }
 
+  removeTopic(id: string, index: number, text: string): Promise<WordCard> {
+    return this.#repo().removeTopic(id, index, text);
+  }
+
   remove(id: string): Promise<void> {
     return this.#repo().remove(id);
   }

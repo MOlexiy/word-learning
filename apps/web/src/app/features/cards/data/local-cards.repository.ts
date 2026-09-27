@@ -64,6 +64,13 @@ export class LocalCardsRepository implements CardsRepository {
     return this.#mutate(id, (card) => ({ ...card, topic: [...card.topic, paragraph] }));
   }
 
+  async removeTopic(id: string, index: number, text: string): Promise<WordCard> {
+    return this.#mutate(id, (card) => {
+      if (card.topic[index] !== text) throw new Error('errors.TOPIC_CHANGED');
+      return { ...card, topic: card.topic.filter((_, i) => i !== index) };
+    });
+  }
+
   async remove(id: string): Promise<void> {
     this.#writeCards(this.#readCards().filter((card) => card.id !== id));
     const progress = this.#readProgress();

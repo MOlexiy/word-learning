@@ -27,6 +27,13 @@ export type CardInputRaw = z.input<typeof cardInputSchema>;
 export const addTopicSchema = z.object({ text: topicParagraphSchema });
 export type AddTopicRequest = z.infer<typeof addTopicSchema>;
 
+/**
+ * Видалення параграфа за індексом. `text` — очікуваний вміст: якщо список параграфів тим часом
+ * змінився (інша вкладка), сервер відмовить (TOPIC_CHANGED), а не видалить не той параграф.
+ */
+export const removeTopicSchema = z.object({ text: z.string().max(10_000) });
+export type RemoveTopicRequest = z.infer<typeof removeTopicSchema>;
+
 export const randomProgressSchema = z.object({
   n: z.number().int().min(REPETITION_MIN_STEP).max(REPETITION_MAX_STEP),
   lockedUntil: z.iso.datetime({ offset: true }),

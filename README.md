@@ -220,23 +220,24 @@ teacher DELETE students/:u          accepted → rejected («Відкріпит�
 
 ## 4. API
 
-| Метод          | Шлях                                                     | Опис                              |
-| -------------- | -------------------------------------------------------- | --------------------------------- |
-| POST           | `/api/auth/register` · `/login` · `/refresh` · `/logout` | публічні                          |
-| GET            | `/api/auth/me`                                           | профіль                           |
-| GET/POST       | `/api/cards`                                             | список (`id`, `name`) / створення |
-| POST           | `/api/cards/random`                                      | рандом з таймером                 |
-| POST           | `/api/cards/import`                                      | імпорт гостьових карток           |
-| GET/PUT/DELETE | `/api/cards/:id`                                         | картка (GET без побічних ефектів) |
-| POST           | `/api/cards/:id/view`                                    | відкриття картки, `k + 1`         |
-| POST           | `/api/cards/:id/topics`                                  | додати параграф                   |
-| GET            | `/api/teachers?query=`                                   | пошук вчителів                    |
-| PUT/DELETE     | `/api/profile/teacher`                                   | заявка / відкріплення (student)   |
-| GET            | `/api/teacher/requests` · `/students`                    | teacher                           |
-| POST           | `/api/teacher/requests/:u/accept` · `/reject`            | teacher                           |
-| DELETE         | `/api/teacher/students/:u`                               | teacher                           |
-| GET            | `/api/teacher/students/:u/cards[/:id]`                   | read-only картки учня             |
-| GET            | `/api/health`                                            | стан API і БД (публічний)         |
+| Метод          | Шлях                                                     | Опис                                                               |
+| -------------- | -------------------------------------------------------- | ------------------------------------------------------------------ |
+| POST           | `/api/auth/register` · `/login` · `/refresh` · `/logout` | публічні                                                           |
+| GET            | `/api/auth/me`                                           | профіль                                                            |
+| GET/POST       | `/api/cards`                                             | список (`id`, `name`) / створення                                  |
+| POST           | `/api/cards/random`                                      | рандом з таймером                                                  |
+| POST           | `/api/cards/import`                                      | імпорт гостьових карток                                            |
+| GET/PUT/DELETE | `/api/cards/:id`                                         | картка (GET без побічних ефектів)                                  |
+| POST           | `/api/cards/:id/view`                                    | відкриття картки, `k + 1`                                          |
+| POST           | `/api/cards/:id/topics`                                  | додати параграф                                                    |
+| DELETE         | `/api/cards/:id/topics/:index`                           | видалити параграф (тіло `{ text }` — захист від видалення не того) |
+| GET            | `/api/teachers?query=`                                   | пошук вчителів                                                     |
+| PUT/DELETE     | `/api/profile/teacher`                                   | заявка / відкріплення (student)                                    |
+| GET            | `/api/teacher/requests` · `/students`                    | teacher                                                            |
+| POST           | `/api/teacher/requests/:u/accept` · `/reject`            | teacher                                                            |
+| DELETE         | `/api/teacher/students/:u`                               | teacher                                                            |
+| GET            | `/api/teacher/students/:u/cards[/:id]`                   | read-only картки учня                                              |
+| GET            | `/api/health`                                            | стан API і БД (публічний)                                          |
 
 ## 5. Що варто знати
 

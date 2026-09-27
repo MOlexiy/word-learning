@@ -37,6 +37,16 @@ export class CardsService {
     return toWordCard(await this.cards.appendTopic(id, text));
   }
 
+  /** Видаляє параграф `index`, лише якщо його текст досі збігається з `expectedText`. */
+  async removeTopic(userId: string, id: string, index: number, expectedText: string): Promise<WordCard> {
+    const card = await this.#getOwned(userId, id);
+    if (card.topic[index] !== expectedText) {
+      throw new ApiException(HttpStatus.CONFLICT, 'TOPIC_CHANGED', 'Paragraph has changed, reload the card');
+    }
+    const topics = card.topic.filter((_, i) => i !== index);
+    return toWordCard(await this.cards.setTopics(id, topics));
+  }
+
   async remove(userId: string, id: string): Promise<void> {
     await this.#getOwned(userId, id);
     await this.cards.delete(id);

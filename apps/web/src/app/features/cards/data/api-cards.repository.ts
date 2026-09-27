@@ -42,6 +42,10 @@ export class ApiCardsRepository implements CardsRepository {
     return this.#byId(id, this.#http.post<WordCard>(`${BASE}/${id}/topics`, { text }));
   }
 
+  removeTopic(id: string, index: number, text: string): Promise<WordCard> {
+    return this.#byId(id, this.#http.delete<WordCard>(`${BASE}/${id}/topics/${index}`, { body: { text } }));
+  }
+
   async remove(id: string): Promise<void> {
     await this.#byId(id, this.#http.delete<void>(`${BASE}/${id}`));
   }

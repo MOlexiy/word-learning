@@ -144,6 +144,21 @@ await check('додавання параграфа та редагування',
   assert.equal(updated.body.id, cardIds[0]);
 });
 
+await check('видалення параграфа: лише якщо текст збігається (інакше 409 TOPIC_CHANGED)', async () => {
+  const stale = await student.call('DELETE', `/cards/${cardIds[0]}/topics/1`, { text: 'something else' });
+  assert.equal(stale.status, 409);
+  assert.equal(stale.body.code, 'TOPIC_CHANGED');
+  const outOfRange = await student.call('DELETE', `/cards/${cardIds[0]}/topics/9`, {
+    text: 'An apple a day.',
+  });
+  assert.equal(outOfRange.body.code, 'TOPIC_CHANGED');
+  const ok = await student.call('DELETE', `/cards/${cardIds[0]}/topics/1`, { text: 'An apple a day.' });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(ok.body.topic, ['I like apple.']);
+  const foreign = await teacher.call('DELETE', `/cards/${cardIds[0]}/topics/0`, { text: 'I like apple.' });
+  assert.equal(foreign.body.code, 'CARD_NOT_FOUND');
+});
+
 await check('рандом: 3 різні картки, потім null + nextAvailableAt ≈ now + 5 днів', async () => {
   const drawn = [];
   for (let i = 0; i < 3; i++) {

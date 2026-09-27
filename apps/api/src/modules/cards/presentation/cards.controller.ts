@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -15,7 +16,7 @@ import type { AuthUser } from '../../../common/auth/auth-user';
 import { CurrentUser } from '../../../common/auth/decorators';
 import { CardsService } from '../application/cards.service';
 import { RandomCardService } from '../application/random-card.service';
-import { AddTopicDto, CardInputDto, ImportCardsDto } from './cards.dto';
+import { AddTopicDto, CardInputDto, ImportCardsDto, RemoveTopicDto } from './cards.dto';
 
 const CardId = () => Param('id', new ParseUUIDPipe({ version: '4' }));
 
@@ -69,6 +70,17 @@ export class CardsController {
   @Post(':id/topics')
   addTopic(@CurrentUser() user: AuthUser, @CardId() id: string, @Body() dto: AddTopicDto): Promise<WordCard> {
     return this.cards.addTopic(user.username, id, dto.text);
+  }
+
+  /** Тіло `{ text }` — очікуваний вміст параграфа (захист від видалення не того після змін). */
+  @Delete(':id/topics/:index')
+  removeTopic(
+    @CurrentUser() user: AuthUser,
+    @CardId() id: string,
+    @Param('index', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) index: number,
+    @Body() dto: RemoveTopicDto,
+  ): Promise<WordCard> {
+    return this.cards.removeTopic(user.username, id, index, dto.text);
   }
 
   @Delete(':id')

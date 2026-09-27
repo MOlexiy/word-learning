@@ -10,6 +10,8 @@ export interface CardsRepository {
   create(input: CardInput): Promise<WordCard>;
   update(id: string, input: CardInput): Promise<WordCard>;
   addTopic(id: string, text: string): Promise<WordCard>;
+  /** Видаляє параграф `index`, якщо його текст досі `text` (інакше — помилка TOPIC_CHANGED). */
+  removeTopic(id: string, index: number, text: string): Promise<WordCard>;
   remove(id: string): Promise<void>;
   /** Випадкова доступна картка + постановка на таймер 5·n днів. */
   drawRandom(): Promise<RandomPickResult>;

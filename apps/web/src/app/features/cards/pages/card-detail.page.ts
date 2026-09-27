@@ -12,6 +12,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { CardInput, WordCard } from '@wl/shared';
+import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ErrorTranslator } from '../../../core/i18n/error-translator.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { CardStorageService } from '../data/card-storage.service';
@@ -51,7 +52,7 @@ import { CardViewComponent } from '../ui/card-view.component';
                 (cancelled)="editing.set(false)"
               />
             } @else {
-              <wl-card-view [card]="c" />
+              <wl-card-view [card]="c" [canRemoveTopics]="true" (topicRemove)="removeTopic($event)" />
 
               <form class="add-topic" [formGroup]="topicForm" (ngSubmit)="addTopic()">
                 <label class="field">
@@ -59,6 +60,8 @@ import { CardViewComponent } from '../ui/card-view.component';
                   <textarea
                     class="input"
                     rows="3"
+                    id="new-topic"
+                    name="newTopic"
                     formControlName="text"
                     [placeholder]="'cards.detail.newTopicPlaceholder' | transloco"
                   ></textarea>
@@ -73,7 +76,7 @@ import { CardViewComponent } from '../ui/card-view.component';
                   {{ 'cards.detail.edit' | transloco }}
                 </button>
                 <button class="btn btn--danger" type="button" [disabled]="busy()" (click)="remove()">
-                  {{ (confirmDelete() ? 'cards.detail.confirmDelete' : 'cards.detail.delete') | transloco }}
+                  {{ 'cards.detail.delete' | transloco }}
                 </button>
               </div>
             }
@@ -92,6 +95,7 @@ export class CardDetailPage {
   readonly #router = inject(Router);
   readonly #transloco = inject(TranslocoService);
   readonly #errors = inject(ErrorTranslator);
+  readonly #confirm = inject(ConfirmService);
 
   protected readonly card = signal<WordCard | null>(null);
   protected readonly state = signal<'loading' | 'ready' | 'not-found' | 'error'>('loading');
@@ -100,7 +104,6 @@ export class CardDetailPage {
   protected readonly errorText = computed(() => this.#errors.message(this.error()));
   protected readonly editing = signal(false);
   protected readonly busy = signal(false);
-  protected readonly confirmDelete = signal(false);
   protected readonly topicForm = new FormGroup({
     text: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(10_000)] }),
   });
@@ -132,12 +135,29 @@ export class CardDetailPage {
     });
   }
 
+  protected async removeTopic({ index, text }: { index: number; text: string }): Promise<void> {
+    const confirmed = await this.#confirm.ask({
+      titleKey: 'cards.detail.deleteTopicTitle',
+      messageKey: 'confirm.irreversible',
+      quote: text,
+      danger: true,
+    });
+    if (!confirmed) return;
+    await this.#run(async () => {
+      this.card.set(await this.#storage.removeTopic(this.id(), index, text));
+      this.#notify.success(this.#transloco.translate('cards.detail.topicDeleted'));
+    });
+  }
+
   protected async remove(): Promise<void> {
-    if (!this.confirmDelete()) {
-      this.confirmDelete.set(true);
-      setTimeout(() => this.confirmDelete.set(false), 4000);
-      return;
-    }
+    const card = this.card();
+    const confirmed = await this.#confirm.ask({
+      titleKey: 'cards.detail.deleteCardTitle',
+      messageKey: 'cards.detail.deleteCardText',
+      params: { name: card?.name ?? '' },
+      danger: true,
+    });
+    if (!confirmed) return;
     await this.#run(async () => {
       await this.#storage.remove(this.id());
       this.#notify.success(this.#transloco.translate('cards.detail.deleted'));

@@ -48,6 +48,10 @@ export class PrismaCardsRepository extends CardsRepository {
     return this.prisma.wordCard.update({ where: { id }, data: { topic: { push: text } } });
   }
 
+  setTopics(id: string, topics: string[]): Promise<CardRecord> {
+    return this.prisma.wordCard.update({ where: { id }, data: { topic: { set: topics } } });
+  }
+
   drawRandom(
     userId: string,
     now: Date,

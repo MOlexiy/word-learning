@@ -32,6 +32,11 @@
     "search": "Search…",
     "empty": "—"
   },
+  "confirm": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "irreversible": "This action cannot be undone."
+  },
   "roles": {
     "student": "Student",
     "teacher": "Teacher"
@@ -78,9 +83,13 @@
       "addTopic": "+ Add paragraph",
       "edit": "✎ Edit",
       "delete": "Delete",
-      "confirmDelete": "Delete for sure?",
       "saved": "Saved",
-      "deleted": "Card deleted"
+      "deleted": "Card deleted",
+      "deleteTopic": "Delete paragraph",
+      "deleteTopicTitle": "Delete this paragraph?",
+      "topicDeleted": "Paragraph deleted",
+      "deleteCardTitle": "Delete the card “{{name}}”?",
+      "deleteCardText": "The word, all its paragraphs and random progress will be deleted. This action cannot be undone."
     },
     "view": {
       "viewsHint": "How many times the card was opened",
@@ -93,7 +102,8 @@
       "topicFirst": "Paragraph (context with the word)",
       "topics": "Paragraphs",
       "addTopic": "+ Paragraph",
-      "removeTopic": "Remove paragraph"
+      "removeTopic": "Remove paragraph",
+      "removeTopicHint": "The paragraph will be removed from the card when you click “Save”."
     },
     "random": {
       "paused": "All cards are on pause. The next one becomes available {{date}}",
@@ -213,6 +223,7 @@
     "TOO_MANY_REQUESTS": "Too many attempts. Please wait a minute and try again",
     "VALIDATION_FAILED": "Please check the form fields",
     "CARD_NOT_FOUND": "Card not found",
+    "TOPIC_CHANGED": "The paragraph has changed (maybe in another tab). Reload the page and try again",
     "TEACHER_NOT_FOUND": "No teacher with this username",
     "TEACHER_ALREADY_ACCEPTED": "This teacher has already accepted your request",
     "REQUEST_NOT_FOUND": "Request or student not found",

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { WordCard } from '@wl/shared';
 import { SelectionSpeakerComponent } from '../../../core/speech/selection-speaker.component';
@@ -72,6 +72,17 @@ import { CollocationLinksComponent } from './collocation-links.component';
               <li class="topics__item" lang="en">
                 <wl-speak-button [text]="paragraph" [key]="c.id + ':topic:' + $index" />
                 <span><wl-spoken-text [text]="paragraph" [key]="c.id + ':topic:' + $index" /></span>
+                @if (canRemoveTopics()) {
+                  <button
+                    type="button"
+                    class="topic-remove-btn"
+                    [title]="'cards.detail.deleteTopic' | transloco"
+                    [attr.aria-label]="'cards.detail.deleteTopic' | transloco"
+                    (click)="topicRemove.emit({ index: $index, text: paragraph })"
+                  >
+                    <span aria-hidden="true">🗑</span>
+                  </button>
+                }
               </li>
             }
           </ol>
@@ -85,6 +96,9 @@ import { CollocationLinksComponent } from './collocation-links.component';
 })
 export class CardViewComponent {
   readonly card = input.required<WordCard>();
+  /** Показувати кнопку видалення параграфа (власник картки; у вчителя — ні). */
+  readonly canRemoveTopics = input(false);
+  readonly topicRemove = output<{ index: number; text: string }>();
   protected readonly fields = CARD_TEXT_FIELDS;
   protected readonly speech = inject(SpeechService);
 }

@@ -23,6 +23,7 @@ export abstract class CardsRepository {
   /** Атомарний інкремент лічильника відкриттів `k`. */
   abstract incrementViews(id: string): Promise<CardRecord>;
   abstract appendTopic(id: string, text: string): Promise<CardRecord>;
+  abstract setTopics(id: string, topics: string[]): Promise<CardRecord>;
   /**
    * В одній транзакції: обирає випадкову доступну картку (`lockedUntil <= now` або без прогресу)
    * і зберігає новий прогрес, обчислений доменною функцією `advance`.
