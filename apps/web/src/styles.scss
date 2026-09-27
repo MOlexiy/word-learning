@@ -640,3 +640,31 @@ dd.speakable {
   cursor: pointer;
   white-space: nowrap;
 }
+
+/* ---------- Посилання на словники колокацій ---------- */
+.field__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.collocation-links {
+  display: inline-flex;
+  gap: 10px;
+  margin-left: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.field__head .collocation-links {
+  margin-left: 0;
+}
+.collocation-links__link {
+  text-decoration: none;
+  white-space: nowrap;
+}
+.collocation-links__link:hover {
+  text-decoration: underline;
+}

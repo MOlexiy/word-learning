@@ -51,6 +51,9 @@
       "adv": "Прислівник (adv)",
       "collocations": "Колокації"
     },
+    "collocationLinks": {
+      "open": "Відкрити колокації на {{site}} (нова вкладка)"
+    },
     "list": {
       "title": "Мої слова",
       "searchLabel": "Пошук слова",

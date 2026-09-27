@@ -51,6 +51,9 @@
       "adv": "Adverb (adv)",
       "collocations": "Collocations"
     },
+    "collocationLinks": {
+      "open": "Open collocations on {{site}} (new tab)"
+    },
     "list": {
       "title": "My words",
       "searchLabel": "Search for a word",

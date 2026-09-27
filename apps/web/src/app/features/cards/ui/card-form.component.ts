@@ -9,11 +9,13 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { type CardInput, cardInputSchema, type WordCard } from '@wl/shared';
 import { ErrorTranslator } from '../../../core/i18n/error-translator.service';
 import { CARD_TEXT_FIELDS } from './card-fields';
+import { CollocationLinksComponent } from './collocation-links.component';
 
 /**
  * Форма картки.
@@ -23,7 +25,7 @@ import { CARD_TEXT_FIELDS } from './card-fields';
  */
 @Component({
   selector: 'wl-card-form',
-  imports: [ReactiveFormsModule, TranslocoPipe],
+  imports: [ReactiveFormsModule, TranslocoPipe, CollocationLinksComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -38,7 +40,12 @@ import { CARD_TEXT_FIELDS } from './card-fields';
       <div class="form-grid">
         @for (field of fields; track field.key) {
           <div class="field" [class.form-grid__wide]="field.multiline">
-            <label class="field__label" [for]="'card-' + field.key">{{ field.labelKey | transloco }}</label>
+            <div class="field__head">
+              <label class="field__label" [for]="'card-' + field.key">{{ field.labelKey | transloco }}</label>
+              @if (field.key === 'collocations') {
+                <wl-collocation-links [word]="word()" />
+              }
+            </div>
             @if (field.multiline) {
               <textarea
                 class="input"
@@ -136,6 +143,10 @@ export class CardFormComponent {
     adv: this.#fb.control(''),
     collocations: this.#fb.control(''),
     topic: this.#fb.array<FormControl<string>>([]),
+  });
+  /** Поточне значення поля «Слово» — для посилань на словники колокацій. */
+  protected readonly word = toSignal(this.form.controls.name.valueChanges, {
+    initialValue: this.form.controls.name.value,
   });
 
   constructor() {

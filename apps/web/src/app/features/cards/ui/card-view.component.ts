@@ -7,6 +7,7 @@ import { SpeechSettingsComponent } from '../../../core/speech/speech-settings.co
 import { SpeechService } from '../../../core/speech/speech.service';
 import { SpokenTextComponent } from '../../../core/speech/spoken-text.component';
 import { CARD_TEXT_FIELDS } from './card-fields';
+import { CollocationLinksComponent } from './collocation-links.component';
 
 /**
  * Read-only відображення всіх полів картки з озвучкою: кнопки 🔊 біля слова, англійських полів
@@ -21,6 +22,7 @@ import { CARD_TEXT_FIELDS } from './card-fields';
     SpokenTextComponent,
     SelectionSpeakerComponent,
     SpeechSettingsComponent,
+    CollocationLinksComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -37,7 +39,12 @@ import { CARD_TEXT_FIELDS } from './card-fields';
       <dl class="card-view__fields">
         @for (field of fields; track field.key) {
           <div class="card-view__row" [class.card-view__row--wide]="field.multiline">
-            <dt>{{ field.labelKey | transloco }}</dt>
+            <dt>
+              {{ field.labelKey | transloco }}
+              @if (field.key === 'collocations') {
+                <wl-collocation-links [word]="c.name" />
+              }
+            </dt>
             @if (c[field.key]) {
               <dd class="speakable" [attr.lang]="field.speakable ? 'en' : null">
                 @if (field.speakable) {
