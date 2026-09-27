@@ -2,6 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { z } from 'zod';
 import {
   advanceProgress,
+  type CardImage,
+  cardImageSchema,
   type CardInput,
   cardInputSchema,
   type ImportCardsRequest,
@@ -24,6 +26,8 @@ export const GUEST_PROGRESS_KEY = 'wl.guest.randomProgress';
 const storedCardSchema = cardInputSchema.extend({
   id: z.string().min(1),
   userId: z.null().default(null),
+  image: cardImageSchema.nullable().catch(null),
+  imageHidden: z.boolean().catch(false),
   k: z.number().int().min(0).catch(0),
   createdAt: z.string().catch(() => new Date().toISOString()),
   updatedAt: z.string().catch(() => new Date().toISOString()),
@@ -50,7 +54,16 @@ export class LocalCardsRepository implements CardsRepository {
 
   async create(input: CardInput): Promise<WordCard> {
     const now = new Date().toISOString();
-    const card: WordCard = { ...input, id: newId(), userId: null, k: 0, createdAt: now, updatedAt: now };
+    const card: WordCard = {
+      ...input,
+      id: newId(),
+      userId: null,
+      image: null,
+      imageHidden: false,
+      k: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
     this.#writeCards([...this.#readCards(), card]);
     return card;
   }
@@ -69,6 +82,11 @@ export class LocalCardsRepository implements CardsRepository {
       if (card.topic[index] !== text) throw new Error('errors.TOPIC_CHANGED');
       return { ...card, topic: card.topic.filter((_, i) => i !== index) };
     });
+  }
+
+  async setImage(id: string, image: CardImage | null): Promise<WordCard> {
+    const value = image === null ? null : cardImageSchema.parse(image);
+    return this.#mutate(id, (card) => ({ ...card, image: value, imageHidden: value === null }));
   }
 
   async remove(id: string): Promise<void> {

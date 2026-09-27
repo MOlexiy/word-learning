@@ -11,7 +11,7 @@ import {
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import type { CardInput, WordCard } from '@wl/shared';
+import type { CardImage, CardInput, WordCard } from '@wl/shared';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ErrorTranslator } from '../../../core/i18n/error-translator.service';
 import { NotifyService } from '../../../core/notify/notify.service';
@@ -52,7 +52,13 @@ import { CardViewComponent } from '../ui/card-view.component';
                 (cancelled)="editing.set(false)"
               />
             } @else {
-              <wl-card-view [card]="c" [canRemoveTopics]="true" (topicRemove)="removeTopic($event)" />
+              <wl-card-view
+                [card]="c"
+                [canRemoveTopics]="true"
+                [canEditImage]="true"
+                (topicRemove)="removeTopic($event)"
+                (imageChange)="setImage($event)"
+              />
 
               <form class="add-topic" [formGroup]="topicForm" (ngSubmit)="addTopic()">
                 <label class="field">
@@ -147,6 +153,16 @@ export class CardDetailPage {
       this.card.set(await this.#storage.removeTopic(this.id(), index, text));
       this.#notify.success(this.#transloco.translate('cards.detail.topicDeleted'));
     });
+  }
+
+  protected async setImage(image: CardImage | null): Promise<void> {
+    const id = this.id();
+    try {
+      const card = await this.#storage.setImage(id, image);
+      if (id === this.id()) this.card.set(card);
+    } catch (error: unknown) {
+      this.#notify.error(this.#errors.message(error));
+    }
   }
 
   protected async remove(): Promise<void> {

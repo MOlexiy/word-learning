@@ -16,7 +16,7 @@ import type { AuthUser } from '../../../common/auth/auth-user';
 import { CurrentUser } from '../../../common/auth/decorators';
 import { CardsService } from '../application/cards.service';
 import { RandomCardService } from '../application/random-card.service';
-import { AddTopicDto, CardInputDto, ImportCardsDto, RemoveTopicDto } from './cards.dto';
+import { AddTopicDto, CardInputDto, ImportCardsDto, RemoveTopicDto, SetCardImageDto } from './cards.dto';
 
 const CardId = () => Param('id', new ParseUUIDPipe({ version: '4' }));
 
@@ -81,6 +81,16 @@ export class CardsController {
     @Body() dto: RemoveTopicDto,
   ): Promise<WordCard> {
     return this.cards.removeTopic(user.username, id, index, dto.text);
+  }
+
+  /** Ілюстрація до прикладу вживання (URL з пошуку /images/search) або `null` — прибрати. */
+  @Put(':id/image')
+  setImage(
+    @CurrentUser() user: AuthUser,
+    @CardId() id: string,
+    @Body() dto: SetCardImageDto,
+  ): Promise<WordCard> {
+    return this.cards.setImage(user.username, id, dto.image);
   }
 
   @Delete(':id')

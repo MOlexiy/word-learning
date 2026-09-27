@@ -7,11 +7,12 @@ import { HealthController } from './infrastructure/health/health.controller';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CardsModule } from './modules/cards/cards.module';
+import { ImagesModule } from './modules/images/images.module';
 import { UsersModule } from './modules/users/users.module';
 import { AppZodValidationPipe } from './common/errors/zod-validation.pipe';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, ClockModule, AuthModule, UsersModule, CardsModule],
+  imports: [ConfigModule, PrismaModule, ClockModule, AuthModule, UsersModule, CardsModule, ImagesModule],
   controllers: [HealthController],
   providers: [
     { provide: APP_PIPE, useClass: AppZodValidationPipe },

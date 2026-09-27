@@ -9,6 +9,11 @@ const envSchema = z.object({
   COOKIE_SECURE: z.stringbool().default(true),
   /** true за реверс-проксі (Render, Vercel rewrite): IP клієнта з X-Forwarded-For. */
   TRUST_PROXY: z.stringbool().default(false),
+  /** Ключ Pexels API (https://www.pexels.com/api/). Без нього картинки до прикладів не показуються. */
+  PEXELS_API_KEY: z
+    .string()
+    .optional()
+    .transform((value) => (value ? value : undefined)),
   WEB_ORIGIN: z
     .string()
     .optional()

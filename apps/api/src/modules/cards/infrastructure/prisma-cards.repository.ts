@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type { CardInput, RandomProgress, WordCardSummary } from '@wl/shared';
+import type { CardImage, CardInput, RandomProgress, WordCardSummary } from '@wl/shared';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { type CardRecord, CardsRepository, type ImportedCard } from '../domain/cards.repository';
 
@@ -52,6 +52,10 @@ export class PrismaCardsRepository extends CardsRepository {
     return this.prisma.wordCard.update({ where: { id }, data: { topic: { set: topics } } });
   }
 
+  setImage(id: string, image: CardImage | null): Promise<CardRecord> {
+    return this.prisma.wordCard.update({ where: { id }, data: imageColumns(image, image === null) });
+  }
+
   drawRandom(
     userId: string,
     now: Date,
@@ -97,7 +101,11 @@ export class PrismaCardsRepository extends CardsRepository {
   }
 
   importMany(userId: string, cards: ImportedCard[]): Promise<number> {
-    const rows = cards.map(({ progress, ...card }) => ({ id: randomUUID(), card, progress }));
+    const rows = cards.map(({ progress, image, imageHidden, ...card }) => ({
+      id: randomUUID(),
+      card: { ...card, ...imageColumns(image, imageHidden) },
+      progress,
+    }));
     return this.prisma.$transaction(async (tx) => {
       await tx.wordCard.createMany({ data: rows.map(({ id, card }) => ({ ...card, id, userId })) });
       const progress = rows.flatMap(({ id, progress: p }) =>
@@ -107,4 +115,13 @@ export class PrismaCardsRepository extends CardsRepository {
       return rows.length;
     });
   }
+}
+
+function imageColumns(image: CardImage | null, hidden: boolean) {
+  return {
+    imageUrl: image?.url ?? null,
+    imageAuthor: image?.author ?? null,
+    imagePageUrl: image?.pageUrl ?? null,
+    imageHidden: image ? false : hidden,
+  };
 }

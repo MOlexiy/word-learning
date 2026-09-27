@@ -1,5 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import type { CardInput, ImportCardsRequest, ImportCardsResult, WordCard, WordCardSummary } from '@wl/shared';
+import type {
+  CardImage,
+  CardInput,
+  ImportCardsRequest,
+  ImportCardsResult,
+  WordCard,
+  WordCardSummary,
+} from '@wl/shared';
 import { type CardRecord, CardsRepository } from '../domain/cards.repository';
 import { toWordCard } from './card.mapper';
 import { ApiException } from '../../../common/errors/api.exception';
@@ -45,6 +52,11 @@ export class CardsService {
     }
     const topics = card.topic.filter((_, i) => i !== index);
     return toWordCard(await this.cards.setTopics(id, topics));
+  }
+
+  async setImage(userId: string, id: string, image: CardImage | null): Promise<WordCard> {
+    await this.#getOwned(userId, id);
+    return toWordCard(await this.cards.setImage(id, image));
   }
 
   async remove(userId: string, id: string): Promise<void> {

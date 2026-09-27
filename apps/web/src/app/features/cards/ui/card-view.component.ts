@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import type { WordCard } from '@wl/shared';
+import type { CardImage, WordCard } from '@wl/shared';
 import { SelectionSpeakerComponent } from '../../../core/speech/selection-speaker.component';
 import { SpeakButtonComponent } from '../../../core/speech/speak-button.component';
 import { SpeechSettingsComponent } from '../../../core/speech/speech-settings.component';
 import { SpeechService } from '../../../core/speech/speech.service';
 import { SpokenTextComponent } from '../../../core/speech/spoken-text.component';
 import { CARD_TEXT_FIELDS } from './card-fields';
+import { CardImageComponent } from './card-image.component';
 import { CollocationLinksComponent } from './collocation-links.component';
 
 /**
@@ -23,6 +24,7 @@ import { CollocationLinksComponent } from './collocation-links.component';
     SelectionSpeakerComponent,
     SpeechSettingsComponent,
     CollocationLinksComponent,
+    CardImageComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -56,6 +58,13 @@ import { CollocationLinksComponent } from './collocation-links.component';
               </dd>
             } @else {
               <dd class="muted">{{ 'common.empty' | transloco }}</dd>
+            }
+            @if (field.key === 'used') {
+              <wl-card-image
+                [card]="c"
+                [editable]="canEditImage()"
+                (imageChange)="imageChange.emit($event)"
+              />
             }
           </div>
         }
@@ -99,6 +108,9 @@ export class CardViewComponent {
   /** Показувати кнопку видалення параграфа (власник картки; у вчителя — ні). */
   readonly canRemoveTopics = input(false);
   readonly topicRemove = output<{ index: number; text: string }>();
+  /** Підбирати/прибирати картинку до прикладу вживання (власник картки; у вчителя — ні). */
+  readonly canEditImage = input(false);
+  readonly imageChange = output<CardImage | null>();
   protected readonly fields = CARD_TEXT_FIELDS;
   protected readonly speech = inject(SpeechService);
 }

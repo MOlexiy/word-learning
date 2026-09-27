@@ -96,6 +96,15 @@
       "topics": "Paragraphs ({{count}})",
       "noTopics": "No paragraphs yet."
     },
+    "image": {
+      "credit": "Photo by {{author}} on Pexels",
+      "another": "↻ Another",
+      "remove": "✕ Remove",
+      "pick": "🖼 Find a picture",
+      "searching": "Looking for a picture…",
+      "noMore": "No more pictures found.",
+      "notFound": "No picture found."
+    },
     "form": {
       "word": "Word *",
       "wordRequired": "Enter a word",
@@ -224,6 +233,7 @@
     "VALIDATION_FAILED": "Please check the form fields",
     "CARD_NOT_FOUND": "Card not found",
     "TOPIC_CHANGED": "The paragraph has changed (maybe in another tab). Reload the page and try again",
+    "IMAGES_UNAVAILABLE": "Image search is unavailable right now",
     "TEACHER_NOT_FOUND": "No teacher with this username",
     "TEACHER_ALREADY_ACCEPTED": "This teacher has already accepted your request",
     "REQUEST_NOT_FOUND": "Request or student not found",

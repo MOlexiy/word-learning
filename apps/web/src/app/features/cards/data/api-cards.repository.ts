@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpStatusCode } from '@angular/common/h
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom, type Observable } from 'rxjs';
 import type {
+  CardImage,
   CardInput,
   ImportCardsRequest,
   ImportCardsResult,
@@ -44,6 +45,10 @@ export class ApiCardsRepository implements CardsRepository {
 
   removeTopic(id: string, index: number, text: string): Promise<WordCard> {
     return this.#byId(id, this.#http.delete<WordCard>(`${BASE}/${id}/topics/${index}`, { body: { text } }));
+  }
+
+  setImage(id: string, image: CardImage | null): Promise<WordCard> {
+    return this.#byId(id, this.#http.put<WordCard>(`${BASE}/${id}/image`, { image }));
   }
 
   async remove(id: string): Promise<void> {

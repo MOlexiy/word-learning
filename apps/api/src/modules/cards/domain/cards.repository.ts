@@ -1,15 +1,21 @@
-import type { CardInput, RandomProgress, WordCardSummary } from '@wl/shared';
+import type { CardImage, CardInput, RandomProgress, WordCardSummary } from '@wl/shared';
 
 export interface CardRecord extends CardInput {
   id: string;
   userId: string;
   k: number;
+  imageUrl: string | null;
+  imageAuthor: string | null;
+  imagePageUrl: string | null;
+  imageHidden: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface ImportedCard extends CardInput {
   k: number;
+  image: CardImage | null;
+  imageHidden: boolean;
   progress?: RandomProgress;
 }
 
@@ -24,6 +30,8 @@ export abstract class CardsRepository {
   abstract incrementViews(id: string): Promise<CardRecord>;
   abstract appendTopic(id: string, text: string): Promise<CardRecord>;
   abstract setTopics(id: string, topics: string[]): Promise<CardRecord>;
+  /** `null` — прибрати картинку і позначити, що автопідбір не потрібен. */
+  abstract setImage(id: string, image: CardImage | null): Promise<CardRecord>;
   /**
    * В одній транзакції: обирає випадкову доступну картку (`lockedUntil <= now` або без прогресу)
    * і зберігає новий прогрес, обчислений доменною функцією `advance`.

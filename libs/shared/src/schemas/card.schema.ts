@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { REPETITION_MAX_STEP, REPETITION_MIN_STEP } from '../spaced-repetition';
+import { type CardImage, cardImageSchema } from './card-image.schema';
 
 const optionalText = (max: number) => z.string().trim().max(max).default('');
 
@@ -47,6 +48,8 @@ export const importCardsSchema = z.object({
         /** Локальний id — потрібен лише щоб зіставити прогрес; на сервері генерується новий. */
         id: z.string().min(1).max(100),
         k: z.number().int().min(0).default(0),
+        image: cardImageSchema.nullable().catch(null).default(null),
+        imageHidden: z.boolean().catch(false).default(false),
       }),
     )
     .max(5_000),
@@ -67,6 +70,10 @@ export interface WordCard {
   adv: string;
   collocations: string;
   topic: string[];
+  /** Ілюстрація до прикладу вживання; null — ще не підібрана або прибрана. */
+  image: CardImage | null;
+  /** Користувач прибрав картинку — не підбирати її автоматично. */
+  imageHidden: boolean;
   /** Скільки разів картку відкривали. */
   k: number;
   createdAt: string;

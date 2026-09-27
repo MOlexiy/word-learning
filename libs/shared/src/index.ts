@@ -2,6 +2,7 @@ export * from './spaced-repetition';
 export * from './api-errors';
 export * from './schemas/auth.schema';
 export * from './schemas/card.schema';
+export * from './schemas/card-image.schema';
 export * from './schemas/mentorship.schema';
 
 /** Назви кук та ендпоінтів, про які домовляються front і back. */

@@ -31,6 +31,9 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      # Ключ Pexels API для картинок до прикладів — вставити вручну в дашборді Render.
+      - key: PEXELS_API_KEY
+        sync: false
       - key: COOKIE_SECURE
         value: 'true'
       # За проксі Render/Vercel: коректний IP клієнта для rate limit.

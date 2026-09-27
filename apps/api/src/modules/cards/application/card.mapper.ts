@@ -14,6 +14,11 @@ export function toWordCard(card: CardRecord): WordCard {
     adv: card.adv,
     collocations: card.collocations,
     topic: card.topic,
+    image:
+      card.imageUrl && card.imagePageUrl
+        ? { url: card.imageUrl, author: card.imageAuthor ?? '', pageUrl: card.imagePageUrl }
+        : null,
+    imageHidden: card.imageHidden,
     k: card.k,
     createdAt: card.createdAt.toISOString(),
     updatedAt: card.updatedAt.toISOString(),

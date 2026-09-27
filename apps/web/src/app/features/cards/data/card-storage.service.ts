@@ -1,5 +1,5 @@
 import { computed, inject, Injectable } from '@angular/core';
-import type { CardInput, RandomPickResult, WordCard, WordCardSummary } from '@wl/shared';
+import type { CardImage, CardInput, RandomPickResult, WordCard, WordCardSummary } from '@wl/shared';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ApiCardsRepository } from './api-cards.repository';
 import type { CardsRepository } from './cards.repository';
@@ -46,6 +46,10 @@ export class CardStorageService implements CardsRepository {
 
   removeTopic(id: string, index: number, text: string): Promise<WordCard> {
     return this.#repo().removeTopic(id, index, text);
+  }
+
+  setImage(id: string, image: CardImage | null): Promise<WordCard> {
+    return this.#repo().setImage(id, image);
   }
 
   remove(id: string): Promise<void> {
