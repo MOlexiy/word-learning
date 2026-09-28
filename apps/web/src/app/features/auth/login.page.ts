@@ -78,7 +78,7 @@ export class LoginPage {
     try {
       const user = await this.#auth.login(this.form.getRawValue());
       this.#notify.success(this.#transloco.translate('auth.login.welcome', { username: user.username }));
-      if (this.#storage.guestCardCount()) {
+      if (this.#storage.guestCardCount() || this.#storage.guestDraftCount()) {
         this.#notify.info(this.#transloco.translate('auth.login.guestCardsHint'));
       }
       const target = this.returnUrl();

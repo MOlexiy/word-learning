@@ -3,6 +3,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ErrorTranslator } from '../../core/i18n/error-translator.service';
 import { NotifyService } from '../../core/notify/notify.service';
 import { CardStorageService } from '../cards/data/card-storage.service';
+import { DraftsStore } from '../cards/data/drafts.store';
 
 /** Перенесення гостьових карток (LocalStorage) разом з інтервалами в акаунт. */
 @Component({
@@ -10,10 +11,10 @@ import { CardStorageService } from '../cards/data/card-storage.service';
   imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (count() > 0) {
+    @if (count() > 0 || drafts() > 0) {
       <section class="panel panel--accent">
         <h2 class="section-title">{{ 'profile.import.title' | transloco }}</h2>
-        <p>{{ 'profile.import.found' | transloco: { count: count() } }}</p>
+        <p>{{ 'profile.import.found' | transloco: { count: count(), drafts: drafts() } }}</p>
         <label class="checkbox">
           <input
             type="checkbox"
@@ -38,11 +39,13 @@ import { CardStorageService } from '../cards/data/card-storage.service';
 })
 export class GuestImportComponent {
   readonly #storage = inject(CardStorageService);
+  readonly #draftsStore = inject(DraftsStore);
   readonly #notify = inject(NotifyService);
   readonly #transloco = inject(TranslocoService);
   readonly #errors = inject(ErrorTranslator);
 
   protected readonly count = signal(this.#storage.guestCardCount());
+  protected readonly drafts = signal(this.#storage.guestDraftCount());
   protected readonly clearAfter = signal(true);
   protected readonly busy = signal(false);
 
@@ -50,8 +53,12 @@ export class GuestImportComponent {
     this.busy.set(true);
     try {
       const imported = await this.#storage.importGuestData({ clearAfter: this.clearAfter() });
-      this.#notify.success(this.#transloco.translate('profile.import.done', { count: imported }));
+      this.#notify.success(
+        this.#transloco.translate('profile.import.done', { count: imported.cards, drafts: imported.drafts }),
+      );
       this.count.set(this.#storage.guestCardCount());
+      this.drafts.set(this.#storage.guestDraftCount());
+      if (imported.drafts) void this.#draftsStore.reload();
     } catch (error: unknown) {
       this.#notify.error(this.#errors.message(error));
     } finally {
@@ -62,5 +69,6 @@ export class GuestImportComponent {
   protected discard(): void {
     this.#storage.clearGuestData();
     this.count.set(0);
+    this.drafts.set(0);
   }
 }

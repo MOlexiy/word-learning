@@ -16,6 +16,7 @@ import { ErrorTranslator } from '../../core/i18n/error-translator.service';
 import { NotifyService } from '../../core/notify/notify.service';
 import { CardViewComponent } from '../cards/ui/card-view.component';
 import { ProfileApi } from '../profile/profile.api';
+import { useStudentContext } from './student-context';
 
 /** Картка учня для вчителя: тільки перегляд, лічильник k учня не змінюється. */
 @Component({
@@ -59,6 +60,7 @@ export class StudentCardDetailPage {
   protected readonly busy = signal(false);
 
   constructor() {
+    useStudentContext(this.studentUserName);
     effect(() => {
       const [username, id] = [this.studentUserName(), this.id()];
       untracked(() => void this.#load(username, id));

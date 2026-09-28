@@ -4,6 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../core/auth/auth.service';
 import { LanguageSwitcherComponent } from '../core/i18n/language-switcher.component';
 import { RandomCardLauncher } from '../features/cards/data/random-card-launcher.service';
+import { QuickAddService } from '../features/quick-add/quick-add.service';
 
 @Component({
   selector: 'wl-header',
@@ -30,9 +31,17 @@ import { RandomCardLauncher } from '../features/cards/data/random-card-launcher.
         >
           🎲 <span class="hide-sm">{{ 'nav.random' | transloco }}</span>
         </button>
-        <a class="btn btn--primary" routerLink="/cards/new" [attr.aria-label]="'nav.addCard' | transloco">
-          + <span class="hide-sm">{{ 'nav.addCard' | transloco }}</span>
-        </a>
+        <button
+          class="btn btn--primary"
+          type="button"
+          [attr.aria-label]="
+            (quickAdd.studentContext() ? 'nav.addWordForStudent' : 'nav.addWord')
+              | transloco: { username: quickAdd.studentContext() ?? '' }
+          "
+          (click)="quickAdd.open()"
+        >
+          + <span class="hide-sm">{{ 'nav.addWord' | transloco }}</span>
+        </button>
         <a class="btn btn--ghost" routerLink="/profile" routerLinkActive="is-active">
           👤 <span class="hide-sm">{{ auth.user()?.username ?? ('nav.guest' | transloco) }}</span>
         </a>
@@ -44,4 +53,6 @@ import { RandomCardLauncher } from '../features/cards/data/random-card-launcher.
 export class HeaderComponent {
   protected readonly auth = inject(AuthService);
   protected readonly random = inject(RandomCardLauncher);
+  /** «+» відкриває швидке додавання (на сторінці учня у вчителя — слово для учня). */
+  protected readonly quickAdd = inject(QuickAddService);
 }

@@ -11,7 +11,7 @@ import type { WordCardSummary } from '@wl/shared';
     <ul class="grid">
       @for (card of cards(); track card.id) {
         <li>
-          <a class="tile" [routerLink]="[...basePath(), card.id]">{{ card.name }}</a>
+          <a class="tile" [routerLink]="[...basePath(), card.id]" lang="en">{{ card.name }}</a>
         </li>
       }
     </ul>

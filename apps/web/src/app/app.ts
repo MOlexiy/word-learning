@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { ConfirmDialogComponent } from './core/confirm/confirm-dialog.component';
 import { NotificationsComponent } from './core/notify/notifications.component';
 import { ServerWakeBannerComponent } from './core/server/server-wake-banner.component';
+import { QuickAddSheetComponent } from './features/quick-add/quick-add-sheet.component';
 import { HeaderComponent } from './layout/header.component';
 
 @Component({
@@ -13,6 +14,7 @@ import { HeaderComponent } from './layout/header.component';
     NotificationsComponent,
     ConfirmDialogComponent,
     ServerWakeBannerComponent,
+    QuickAddSheetComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -22,6 +24,7 @@ import { HeaderComponent } from './layout/header.component';
       <router-outlet />
     </main>
     <wl-notifications />
+    <wl-quick-add-sheet />
     <wl-confirm-dialog />
   `,
 })

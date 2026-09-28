@@ -234,6 +234,100 @@ await check('вчитель переглядає картки учня read-only
   assert.equal((await student.call('GET', `/cards/${cardIds[0]}`)).body.k, 2);
 });
 
+await check('пошук: один запит шукає по name, n, v, adj, adv; у відповіді лише id і name', async () => {
+  const byName = await student.call('GET', '/cards?q=APP');
+  assert.deepEqual(byName.body, [{ id: cardIds[0], name: 'apple!' }]);
+  const byVerb = await student.call('GET', '/cards?q=to%20apple');
+  assert.deepEqual(byVerb.body, [{ id: cardIds[0], name: 'apple!' }], 'знайдено за полем v');
+  assert.deepEqual(
+    (await student.call('GET', '/cards?q=an')).body.map((c) => c.name),
+    ['banana'],
+  );
+  assert.deepEqual((await student.call('GET', '/cards?q=%25')).body, [], '% не є шаблоном');
+  const forTeacher = await teacher.call('GET', `/teacher/students/${S}/cards?q=cher`);
+  assert.deepEqual(
+    forTeacher.body.map((c) => c.name),
+    ['cherry'],
+  );
+});
+
+await check('дублікати: та сама назва → 409 CARD_EXISTS, слово у формах → related', async () => {
+  const exact = await student.call('GET', '/cards/duplicates?name=%20Banana%20');
+  assert.deepEqual(exact.body, { exact: { id: cardIds[1], name: 'banana' }, related: [] });
+  const related = await student.call('GET', '/cards/duplicates?name=apple');
+  assert.deepEqual(related.body, {
+    exact: null,
+    related: [{ id: cardIds[0], name: 'apple!', fields: ['v'] }],
+  });
+  const create = await student.call('POST', '/cards', { name: 'BANANA' });
+  assert.equal(create.status, 409);
+  assert.equal(create.body.code, 'CARD_EXISTS');
+  assert.equal(create.body.meta.cardId, cardIds[1]);
+  assert.equal((await student.call('GET', '/cards')).body.length, 3);
+});
+
+await check('чернетка: швидке/масове додавання, пропуск повторів і наявних карток', async () => {
+  const res = await student.call('POST', '/drafts', {
+    items: [
+      { word: 'serendipity', meaning: 'щаслива випадковість' },
+      { word: 'Cherry' },
+      { word: 'SERENDIPITY' },
+    ],
+  });
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  assert.deepEqual(
+    res.body.created.map((d) => [d.word, d.meaning, d.addedBy]),
+    [['serendipity', 'щаслива випадковість', null]],
+  );
+  assert.deepEqual(res.body.skipped, [
+    { word: 'Cherry', reason: 'card', cardId: cardIds[2] },
+    { word: 'SERENDIPITY', reason: 'draft' },
+  ]);
+  const empty = await student.call('POST', '/drafts', { items: [{ word: '   ' }] });
+  assert.equal(empty.status, 400);
+});
+
+await check('вчитель бачить чернетку учня і додає йому «швидке слово»', async () => {
+  const added = await teacher.call('POST', `/teacher/students/${S}/drafts`, {
+    items: [{ word: 'ubiquitous' }],
+  });
+  assert.equal(added.status, 201, JSON.stringify(added.body));
+  assert.equal(added.body.created[0].addedBy, T);
+  const mine = await student.call('GET', '/drafts');
+  assert.deepEqual(
+    mine.body.map((d) => d.word),
+    ['ubiquitous', 'serendipity'],
+    'нові зверху',
+  );
+  const seen = await teacher.call('GET', `/teacher/students/${S}/drafts`);
+  assert.equal(seen.body.length, 2);
+  const own = mine.body.find((d) => d.word === 'serendipity');
+  const denied = await teacher.call('DELETE', `/teacher/students/${S}/drafts/${own.id}`);
+  assert.equal(denied.status, 403, 'чуже слово учня вчитель не видаляє');
+  assert.equal((await student.call('GET', '/drafts/whatever')).status, 404);
+});
+
+await check('картка з чернетки: чернетка зникає; видалення чернетки', async () => {
+  const drafts = (await student.call('GET', '/drafts')).body;
+  const serendipity = drafts.find((d) => d.word === 'serendipity');
+  const ubiquitous = drafts.find((d) => d.word === 'ubiquitous');
+  const card = await student.call('POST', `/cards?fromDraft=${serendipity.id}`, {
+    name: serendipity.word,
+    means: serendipity.meaning,
+  });
+  assert.equal(card.status, 201, JSON.stringify(card.body));
+  assert.deepEqual(
+    (await student.call('GET', '/drafts')).body.map((d) => d.id),
+    [ubiquitous.id],
+  );
+  const foreign = await teacher.call('DELETE', `/drafts/${ubiquitous.id}`);
+  assert.equal(foreign.body.code, 'DRAFT_NOT_FOUND');
+  assert.equal((await student.call('DELETE', `/drafts/${ubiquitous.id}`)).status, 204);
+  assert.deepEqual((await student.call('GET', '/drafts')).body, []);
+  // Прибираємо, щоб не заважати наступним перевіркам рандому.
+  assert.equal((await student.call('DELETE', `/cards/${card.body.id}`)).status, 204);
+});
+
 await check('відкріплення → rejected, доступ зникає, учень може подати знову', async () => {
   assert.equal((await teacher.call('DELETE', `/teacher/students/${S}`)).status, 204);
   assert.equal((await student.call('GET', '/auth/me')).body.teacher.status, 'rejected');
@@ -252,9 +346,15 @@ await check('імпорт гостьових карток з прогресом'
       { id: 'local-2', name: 'guest-locked', topic: ['x'] },
     ],
     progress: { 'local-2': { n: 3, lockedUntil } },
+    drafts: [{ word: 'guest-draft', meaning: 'x' }],
   });
   assert.equal(res.status, 201, JSON.stringify(res.body));
   assert.equal(res.body.imported, 2);
+  assert.equal(res.body.importedDrafts, 1);
+  assert.deepEqual(
+    (await student.call('GET', '/drafts')).body.map((d) => d.word),
+    ['guest-draft'],
+  );
   const random = await student.call('POST', '/cards/random');
   const card = await student.call('GET', `/cards/${random.body.cardId}`);
   assert.equal(card.body.name, 'guest-word', 'доступна лише не заблокована імпортована картка');

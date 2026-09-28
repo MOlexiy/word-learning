@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { REPETITION_MAX_STEP, REPETITION_MIN_STEP } from '../spaced-repetition';
+import { CARD_SEARCH_MAX_LENGTH } from '../card-search';
 import { type CardImage, cardImageSchema } from './card-image.schema';
+import { draftInputSchema } from './draft.schema';
 
 const optionalText = (max: number) => z.string().trim().max(max).default('');
 
@@ -54,6 +56,8 @@ export const importCardsSchema = z.object({
     )
     .max(5_000),
   progress: z.record(z.string(), randomProgressSchema).default({}),
+  /** Гостьові чернетки (Inbox). */
+  drafts: z.array(draftInputSchema).max(5_000).default([]),
 });
 export type ImportCardsRequest = z.infer<typeof importCardsSchema>;
 
@@ -80,8 +84,23 @@ export interface WordCard {
   updatedAt: string;
 }
 
-/** У каталозі на картці показується лише `name`. */
+/** У каталозі на картці показується лише `name` (і у видачі пошуку теж). */
 export type WordCardSummary = Pick<WordCard, 'id' | 'name'>;
+
+/** GET /cards?q=run — пошук по name, n, v, adj, adv. Без `q` — увесь каталог. */
+export const cardSearchQuerySchema = z.object({
+  q: z.string().trim().max(CARD_SEARCH_MAX_LENGTH).catch('').default(''),
+});
+
+/** GET /cards/duplicates?name=run */
+export const cardDuplicatesQuerySchema = z.object({
+  name: z.string().trim().min(1, 'validation.nameRequired').max(200),
+});
+
+/** POST /cards?fromDraft=<id> — картка з чернетки: чернетка видаляється в тій самій транзакції. */
+export const createCardQuerySchema = z.object({
+  fromDraft: z.uuid().optional(),
+});
 
 export interface RandomPickResult {
   /** null — доступних карток немає. */
@@ -92,4 +111,5 @@ export interface RandomPickResult {
 
 export interface ImportCardsResult {
   imported: number;
+  importedDrafts: number;
 }

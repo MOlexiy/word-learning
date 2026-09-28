@@ -1,7 +1,11 @@
 import { createZodDto } from 'nestjs-zod';
 import {
+  addDraftsSchema,
   addTopicSchema,
+  cardDuplicatesQuerySchema,
   cardInputSchema,
+  cardSearchQuerySchema,
+  createCardQuerySchema,
   importCardsSchema,
   removeTopicSchema,
   setCardImageSchema,
@@ -12,3 +16,7 @@ export class AddTopicDto extends createZodDto(addTopicSchema) {}
 export class RemoveTopicDto extends createZodDto(removeTopicSchema) {}
 export class SetCardImageDto extends createZodDto(setCardImageSchema) {}
 export class ImportCardsDto extends createZodDto(importCardsSchema) {}
+export class CardSearchQueryDto extends createZodDto(cardSearchQuerySchema) {}
+export class CardDuplicatesQueryDto extends createZodDto(cardDuplicatesQuerySchema) {}
+export class CreateCardQueryDto extends createZodDto(createCardQuerySchema) {}
+export class AddDraftsDto extends createZodDto(addDraftsSchema) {}

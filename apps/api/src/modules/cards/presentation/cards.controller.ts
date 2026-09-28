@@ -10,13 +10,29 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import type { ImportCardsResult, RandomPickResult, WordCard, WordCardSummary } from '@wl/shared';
+import type {
+  CardDuplicateCheck,
+  ImportCardsResult,
+  RandomPickResult,
+  WordCard,
+  WordCardSummary,
+} from '@wl/shared';
 import type { AuthUser } from '../../../common/auth/auth-user';
 import { CurrentUser } from '../../../common/auth/decorators';
 import { CardsService } from '../application/cards.service';
 import { RandomCardService } from '../application/random-card.service';
-import { AddTopicDto, CardInputDto, ImportCardsDto, RemoveTopicDto, SetCardImageDto } from './cards.dto';
+import {
+  AddTopicDto,
+  CardDuplicatesQueryDto,
+  CardInputDto,
+  CardSearchQueryDto,
+  CreateCardQueryDto,
+  ImportCardsDto,
+  RemoveTopicDto,
+  SetCardImageDto,
+} from './cards.dto';
 
 const CardId = () => Param('id', new ParseUUIDPipe({ version: '4' }));
 
@@ -27,14 +43,29 @@ export class CardsController {
     private readonly random: RandomCardService,
   ) {}
 
+  /** `?q=run` — пошук по name, n, v, adj, adv; у відповіді лише id і name. */
   @Get()
-  list(@CurrentUser() user: AuthUser): Promise<WordCardSummary[]> {
-    return this.cards.list(user.username);
+  list(@CurrentUser() user: AuthUser, @Query() query: CardSearchQueryDto): Promise<WordCardSummary[]> {
+    return this.cards.list(user.username, query.q);
   }
 
+  /** Перевірка перед створенням: чи є картка з такою назвою або з таким словом у формах. */
+  @Get('duplicates')
+  duplicates(
+    @CurrentUser() user: AuthUser,
+    @Query() query: CardDuplicatesQueryDto,
+  ): Promise<CardDuplicateCheck> {
+    return this.cards.checkDuplicates(user.username, query.name);
+  }
+
+  /** `?fromDraft=<id>` — картка з чернетки: чернетка зникає разом зі створенням картки. */
   @Post()
-  create(@CurrentUser() user: AuthUser, @Body() dto: CardInputDto): Promise<WordCard> {
-    return this.cards.create(user.username, dto);
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CardInputDto,
+    @Query() query: CreateCardQueryDto,
+  ): Promise<WordCard> {
+    return this.cards.create(user.username, dto, query.fromDraft);
   }
 
   /** Обирає випадкову доступну картку та ставить її на таймер. Далі фронт відкриває /cards/:id. */

@@ -16,7 +16,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/clean.mjs && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node ./scripts/mark-cjs.mjs",
-    "test": "node --test test/spaced-repetition.test.mjs"
+    "test": "node --test test/spaced-repetition.test.mjs test/card-search.test.mjs"
   },
   "dependencies": {
     "zod": "^4.1.0"

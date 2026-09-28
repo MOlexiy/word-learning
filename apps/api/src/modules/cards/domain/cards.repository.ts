@@ -1,4 +1,11 @@
-import type { CardImage, CardInput, RandomProgress, WordCardSummary } from '@wl/shared';
+import type {
+  CardImage,
+  CardInput,
+  CardWordForms,
+  DraftInput,
+  RandomProgress,
+  WordCardSummary,
+} from '@wl/shared';
 
 export interface CardRecord extends CardInput {
   id: string;
@@ -22,8 +29,13 @@ export interface ImportedCard extends CardInput {
 /** Порт сховища карток. Реалізація — infrastructure/prisma-cards.repository.ts */
 export abstract class CardsRepository {
   abstract listSummaries(userId: string): Promise<WordCardSummary[]>;
+  /** Пошук `q` по name, n, v, adj, adv (без урахування регістру), впорядкований за релевантністю. */
+  abstract search(userId: string, q: string): Promise<WordCardSummary[]>;
+  /** Картки, де `word` трапляється в назві чи формах слова — кандидати для перевірки дублікатів. */
+  abstract findWordFormCandidates(userId: string, word: string): Promise<CardWordForms[]>;
   abstract findById(id: string): Promise<CardRecord | null>;
-  abstract create(userId: string, input: CardInput): Promise<CardRecord>;
+  /** `fromDraftId` — чернетка власника, яка видаляється в тій самій транзакції. */
+  abstract create(userId: string, input: CardInput, fromDraftId?: string): Promise<CardRecord>;
   abstract update(id: string, input: CardInput): Promise<CardRecord>;
   abstract delete(id: string): Promise<void>;
   /** Атомарний інкремент лічильника відкриттів `k`. */
@@ -42,5 +54,9 @@ export abstract class CardsRepository {
     advance: (current: RandomProgress | null) => RandomProgress,
   ): Promise<string | null>;
   abstract nextUnlockAt(userId: string): Promise<Date | null>;
-  abstract importMany(userId: string, cards: ImportedCard[]): Promise<number>;
+  abstract importMany(
+    userId: string,
+    cards: ImportedCard[],
+    drafts: DraftInput[],
+  ): Promise<{ cards: number; drafts: number }>;
 }

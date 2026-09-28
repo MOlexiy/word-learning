@@ -15,6 +15,8 @@ export const API_ERROR_CODES = [
   'TOO_MANY_REQUESTS',
   'VALIDATION_FAILED',
   'CARD_NOT_FOUND',
+  'CARD_EXISTS',
+  'DRAFT_NOT_FOUND',
   'TOPIC_CHANGED',
   'IMAGES_UNAVAILABLE',
   'TEACHER_NOT_FOUND',
@@ -34,6 +36,8 @@ export interface ApiErrorBody {
   message: string;
   /** Для VALIDATION_FAILED: повідомлення — i18n-ключі `validation.*` або тексти Zod. */
   errors?: { path: string; message: string }[];
+  /** Додаткові дані для клієнта, напр. `{ cardId }` для CARD_EXISTS. */
+  meta?: Record<string, string>;
 }
 
 /** Повідомлення Zod-схем, які є ключами перекладу (а не готовим текстом). */

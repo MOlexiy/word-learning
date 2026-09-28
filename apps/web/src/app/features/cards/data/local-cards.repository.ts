@@ -2,6 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { z } from 'zod';
 import {
   advanceProgress,
+  type CardDuplicateCheck,
+  findCardDuplicates,
+  searchCards,
   type CardImage,
   cardImageSchema,
   type CardInput,
@@ -17,7 +20,8 @@ import {
   type WordCardSummary,
 } from '@wl/shared';
 import { BrowserStorage } from '../../../core/browser/browser-storage';
-import { CardNotFoundError, type CardsRepository } from './cards.repository';
+import { CardExistsError, CardNotFoundError, type CardsRepository } from './cards.repository';
+import { newId } from './local-id';
 
 export const GUEST_CARDS_KEY = 'wl.guest.cards';
 /** Формат: `{ [cardId]: { n: number, lockedUntil: string } }` */
@@ -38,10 +42,13 @@ const storedCardSchema = cardInputSchema.extend({
 export class LocalCardsRepository implements CardsRepository {
   readonly #storage = inject(BrowserStorage);
 
-  async list(): Promise<WordCardSummary[]> {
-    return this.#readCards()
-      .map(({ id, name }) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+  /** Той самий пошук, що на сервері (спільна `searchCards`). */
+  async list(q = ''): Promise<WordCardSummary[]> {
+    return searchCards(this.#readCards(), q).map(({ id, name }) => ({ id, name }));
+  }
+
+  async checkDuplicates(name: string): Promise<CardDuplicateCheck> {
+    return findCardDuplicates(name, this.#readCards());
   }
 
   async get(id: string): Promise<WordCard> {
@@ -52,7 +59,10 @@ export class LocalCardsRepository implements CardsRepository {
     return this.#mutate(id, (card) => ({ ...card, k: card.k + 1 }), { touch: false });
   }
 
+  /** Чернетку (`fromDraftId`) прибирає CardStorageService — тут лише картки. */
   async create(input: CardInput): Promise<WordCard> {
+    const { exact } = findCardDuplicates(input.name, this.#readCards());
+    if (exact) throw new CardExistsError(exact.id, exact.name);
     const now = new Date().toISOString();
     const card: WordCard = {
       ...input,
@@ -114,7 +124,7 @@ export class LocalCardsRepository implements CardsRepository {
   }
 
   /** Пакет для POST /api/cards/import. */
-  exportForImport(): ImportCardsRequest {
+  exportForImport(): Omit<ImportCardsRequest, 'drafts'> {
     const cards = this.#readCards().map(({ userId: _userId, createdAt: _c, updatedAt: _u, ...card }) => card);
     const ids = new Set(cards.map((card) => card.id));
     const progress = Object.fromEntries(Object.entries(this.#readProgress()).filter(([id]) => ids.has(id)));
@@ -170,9 +180,4 @@ export class LocalCardsRepository implements CardsRepository {
   #writeProgress(progress: RandomProgressMap): void {
     this.#storage.write(GUEST_PROGRESS_KEY, progress);
   }
-}
-
-function newId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }

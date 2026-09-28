@@ -34,6 +34,8 @@ model User {
   students      User[]         @relation("TeacherStudents")
   cards         WordCard[]
   refreshTokens RefreshToken[]
+  drafts        WordDraft[]    @relation("DraftOwner")
+  addedDrafts   WordDraft[]    @relation("DraftAuthor")
 
   @@index([teacherId, teacherStatus])
   @@map("users")
@@ -66,6 +68,23 @@ model WordCard {
 
   @@index([userId, name])
   @@map("word_cards")
+}
+
+/// Чернетка (Inbox): швидко збережене слово, яке пізніше стане повною карткою.
+model WordDraft {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.VarChar(32)
+  word      String   @db.VarChar(200)
+  meaning   String   @default("") @db.VarChar(500)
+  /// Вчитель, який додав слово учню; null — учень додав сам.
+  addedBy   String?  @map("added_by") @db.VarChar(32)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user   User  @relation("DraftOwner", fields: [userId], references: [username], onDelete: Cascade, onUpdate: Cascade)
+  author User? @relation("DraftAuthor", fields: [addedBy], references: [username], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("word_drafts")
 }
 
 /// Стан інтервального рандому. Відсутній рядок = картка ще не випадала (крок 1, доступна).

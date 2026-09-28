@@ -132,6 +132,8 @@ import { CollocationLinksComponent } from './collocation-links.component';
 })
 export class CardFormComponent {
   readonly initial = input<WordCard | null>(null);
+  /** Нова картка з наперед заповненими полями (з чернетки чи швидкого додавання). */
+  readonly prefill = input<Partial<CardInput> | null>(null);
   readonly mode = input<'create' | 'edit'>('create');
   /** i18n-ключ тексту кнопки. */
   readonly submitLabel = input('common.save');
@@ -170,7 +172,8 @@ export class CardFormComponent {
   constructor() {
     effect(() => {
       const initial = this.initial();
-      untracked(() => this.#reset(initial));
+      const prefill = this.prefill();
+      untracked(() => this.#reset(initial ?? prefill));
     });
   }
 
@@ -207,7 +210,7 @@ export class CardFormComponent {
     this.saved.emit(parsed.data);
   }
 
-  #reset(card: WordCard | null): void {
+  #reset(card: Partial<CardInput> | null): void {
     this.form.reset({
       name: card?.name ?? '',
       means: card?.means ?? '',
@@ -220,7 +223,7 @@ export class CardFormComponent {
     });
     const topics = this.form.controls.topic;
     topics.clear();
-    const paragraphs = card?.topic.length ? card.topic : [''];
+    const paragraphs = card?.topic?.length ? card.topic : [''];
     for (const paragraph of paragraphs) topics.push(this.#fb.control(paragraph));
   }
 }

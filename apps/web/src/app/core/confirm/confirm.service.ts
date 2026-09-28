@@ -11,8 +11,19 @@ export interface ConfirmOptions {
   quote?: string;
   /** i18n-ключ кнопки підтвердження (за замовчуванням «Видалити»). */
   confirmKey?: string;
+  /** i18n-ключ кнопки відмови (за замовчуванням «Скасувати»). */
+  cancelKey?: string;
+  /** Посилання, що відкриваються в новій вкладці (напр. схожі картки). Тексти — як є. */
+  links?: readonly ConfirmLink[];
   /** Небезпечна дія: червона кнопка підтвердження. */
   danger?: boolean;
+}
+
+export interface ConfirmLink {
+  label: string;
+  /** Дрібний підпис поруч, напр. «n, v». */
+  hint?: string;
+  href: string;
 }
 
 interface PendingConfirm extends ConfirmOptions {
@@ -20,8 +31,8 @@ interface PendingConfirm extends ConfirmOptions {
 }
 
 /**
- * Спливаюче вікно підтвердження: `await confirm.ask({...})` → true («Видалити») або false
- * («Скасувати», Esc, клік поза вікном). Одночасно відкрите лише одне вікно.
+ * Спливаюче вікно підтвердження: `await confirm.ask({...})` → true (кнопка підтвердження) або false
+ * (кнопка відмови, Esc, клік поза вікном). Одночасно відкрите лише одне вікно.
  */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
@@ -31,7 +42,7 @@ export class ConfirmService {
   ask(options: ConfirmOptions): Promise<boolean> {
     this.#pending()?.resolve(false);
     return new Promise<boolean>((resolve) =>
-      this.#pending.set({ confirmKey: 'confirm.delete', ...options, resolve }),
+      this.#pending.set({ confirmKey: 'confirm.delete', cancelKey: 'confirm.cancel', ...options, resolve }),
     );
   }
 

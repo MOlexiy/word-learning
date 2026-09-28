@@ -10,7 +10,7 @@ export class ApiException extends HttpException {
     status: HttpStatus,
     readonly code: ApiErrorCode,
     message: string,
-    extra: Pick<ApiErrorBody, 'errors'> = {},
+    extra: Pick<ApiErrorBody, 'errors' | 'meta'> = {},
   ) {
     super({ statusCode: status, code, message, ...extra } satisfies ApiErrorBody, status);
   }

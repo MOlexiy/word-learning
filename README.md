@@ -8,9 +8,12 @@ Shared types, Zod schemas and the random-draw algorithm live in a single library
 ## Features
 
 - Word cards: meaning, usage example, forms (n / v / adj / adv), collocations, context paragraphs, and an open counter `k`.
+- **Inbox (Чернетка):** the header `+` quick-saves a word with an optional short meaning (or a whole list — comma/newline separated, `word - meaning` lines keep the meaning). Later, "Fill in →" opens the full card form pre-filled; once the card is created the word leaves the inbox and a toast offers the next one.
+- **Search via API** with a 300 ms debounce: one query is matched against `name`, `n`, `v`, `adj` and `adv`; the list still shows only the word. The query lives in the URL (`/?q=run&view=inbox`).
+- **Duplicate check on create:** the same word as an existing card's name blocks creation (with a link to that card); a match only in another card's `n` / `v` / `adj` / `adv` asks "Is it the same card?" with links that open in a new tab.
 - **Spaced random draw:** a card that has been drawn is locked for 5·n days (5, 10 … 30), after which the cycle starts over.
 - **Guest mode** with no sign-up: everything is stored in LocalStorage; after signing in, cards are transferred to the account together with their timers.
-- **Student / teacher** roles: requests, acceptance, unlinking; a teacher views a student's cards read-only.
+- **Student / teacher** roles: requests, acceptance, unlinking; a teacher views a student's cards and inbox read-only, and can add a "quick word" to the student's inbox. A student can share a link to a card or an inbox word with their teacher.
 - **Pronunciation (text-to-speech):** 🔊 next to the word, usage example, forms, collocations and every paragraph; highlighting of the word being spoken; speaking any selected fragment; US/UK accent and 1× / 0.75× speed.
 - **Bilingual interface**, UA / EN.
 - Authentication via HttpOnly cookies with automatic token refresh and login attempt limiting.
@@ -150,6 +153,7 @@ Full DDL — [`apps/api/prisma/migrations/20260926000000_init/migration.sql`](ap
 | `word_cards`           | `id` UUID PK, `user_id` FK, `name`, `means`, `used`, `n`, `v`, `adj`, `adv`, `collocations`, `topic TEXT[]`, `k` | index `(user_id, name)`                                                   |
 | `card_random_progress` | `card_id` PK/FK, `repetition_step` SMALLINT, `locked_until` TIMESTAMPTZ                                          | CHECK 1..6; no row = the card has not been drawn yet                      |
 | `refresh_tokens`       | `id` (= `jti`), `user_id`, `expires_at`, `revoked_at`, `replaced_by_id`                                          | rotation + reuse detection                                                |
+| `word_drafts`          | `id` UUID PK, `user_id` FK, `word`, `meaning`, `added_by` FK→users (teacher, nullable), `created_at`             | inbox; index `(user_id, created_at)`                                      |
 
 A card's `userId` in the DB is NOT NULL: guest cards never reach the DB — they live in LocalStorage with `userId: null`.
 
@@ -218,31 +222,43 @@ teacher DELETE students/:u          accepted → rejected ("Remove"; the student
 
 Transitions are atomic (`updateMany` with a condition on the current status). A teacher sees cards only of students with the `accepted` status.
 
+### Inbox, search, duplicates, sharing
+
+- **Inbox rules** (server and guest mode share them): a word already in the inbox, or already a card name, is skipped and reported back (`skipped`), so the UI can say "already exists — Open". `POST /api/cards?fromDraft=<id>` creates the card and deletes the draft in one transaction.
+- **Search** — `GET /api/cards?q=` narrows rows with `ILIKE` over `name, n, v, adj, adv`, then the shared `searchCards()` orders them (name prefix → name contains → word-form match). Guests use the same function over LocalStorage.
+- **Duplicates** — `findCardDuplicates()` (shared) normalises case, spaces and leading `to / a / an / the`, and splits word-form fields on `, ; /`. `POST /api/cards` also enforces the exact-name rule (409 `CARD_EXISTS` with `meta.cardId`) in case two tabs race.
+- **Sharing with the teacher** reuses the teacher's read-only pages — `/students/<me>/cards/<id>` or `/students/<me>?view=inbox&draft=<id>` (the word is highlighted). No public tokens: only the accepted teacher can open it; a signed-out teacher goes through login and comes back; the student opening their own link lands on their own card. On phones the system share sheet is used, on desktop the link is copied.
+
 ## 4. API
 
-| Method         | Path                                                     | Description                                                                |
-| -------------- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
-| POST           | `/api/auth/register` · `/login` · `/refresh` · `/logout` | public                                                                     |
-| GET            | `/api/auth/me`                                           | profile                                                                    |
-| GET/POST       | `/api/cards`                                             | list (`id`, `name`) / create                                               |
-| POST           | `/api/cards/random`                                      | random draw with timer                                                     |
-| POST           | `/api/cards/import`                                      | import guest cards                                                         |
-| GET/PUT/DELETE | `/api/cards/:id`                                         | card (GET has no side effects)                                             |
-| POST           | `/api/cards/:id/view`                                    | open a card, `k + 1`                                                       |
-| POST           | `/api/cards/:id/topics`                                  | add a paragraph                                                            |
-| DELETE         | `/api/cards/:id/topics/:index`                           | delete a paragraph (body `{ text }` guards against deleting the wrong one) |
-| GET            | `/api/teachers?query=`                                   | search teachers                                                            |
-| PUT/DELETE     | `/api/profile/teacher`                                   | request / unlink (student)                                                 |
-| GET            | `/api/teacher/requests` · `/students`                    | teacher                                                                    |
-| POST           | `/api/teacher/requests/:u/accept` · `/reject`            | teacher                                                                    |
-| DELETE         | `/api/teacher/students/:u`                               | teacher                                                                    |
-| GET            | `/api/teacher/students/:u/cards[/:id]`                   | student's cards, read-only                                                 |
-| GET            | `/api/health`                                            | API and DB status (public)                                                 |
+| Method         | Path                                                     | Description                                                                   |
+| -------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| POST           | `/api/auth/register` · `/login` · `/refresh` · `/logout` | public                                                                        |
+| GET            | `/api/auth/me`                                           | profile                                                                       |
+| GET/POST       | `/api/cards`                                             | list (`id`, `name`; `?q=` searches name/n/v/adj/adv) / create (`?fromDraft=`) |
+| GET            | `/api/cards/duplicates?name=`                            | `{ exact, related }` before creating a card                                   |
+| GET/POST       | `/api/drafts`                                            | inbox list (newest first) / add `{ items: [{ word, meaning }] }`              |
+| DELETE         | `/api/drafts/:id`                                        | remove from inbox                                                             |
+| POST           | `/api/cards/random`                                      | random draw with timer                                                        |
+| POST           | `/api/cards/import`                                      | import guest cards                                                            |
+| GET/PUT/DELETE | `/api/cards/:id`                                         | card (GET has no side effects)                                                |
+| POST           | `/api/cards/:id/view`                                    | open a card, `k + 1`                                                          |
+| POST           | `/api/cards/:id/topics`                                  | add a paragraph                                                               |
+| DELETE         | `/api/cards/:id/topics/:index`                           | delete a paragraph (body `{ text }` guards against deleting the wrong one)    |
+| GET            | `/api/teachers?query=`                                   | search teachers                                                               |
+| PUT/DELETE     | `/api/profile/teacher`                                   | request / unlink (student)                                                    |
+| GET            | `/api/teacher/requests` · `/students`                    | teacher                                                                       |
+| POST           | `/api/teacher/requests/:u/accept` · `/reject`            | teacher                                                                       |
+| DELETE         | `/api/teacher/students/:u`                               | teacher                                                                       |
+| GET            | `/api/teacher/students/:u/cards[/:id]`                   | student's cards, read-only (`?q=` search)                                     |
+| GET/POST       | `/api/teacher/students/:u/drafts`                        | student's inbox / add a "quick word" (marked `addedBy`)                       |
+| DELETE         | `/api/teacher/students/:u/drafts/:id`                    | only words the teacher added                                                  |
+| GET            | `/api/health`                                            | API and DB status (public)                                                    |
 
 ## 5. Good to know
 
 - **Angular 21, not 22.** Angular 22 requires Node ≥ 22.22.3; 21 runs on Node 20.19+/22.12+. To upgrade: `ng update @angular/core@22 @angular/cli@22`.
-- **The migration was written by hand** in the format Prisma generates (the schema-engine binary was unavailable in the development environment). It has been applied and tested on PostgreSQL 17. If `prisma migrate dev` suggests a small diff, it is cosmetic.
+- **The migrations were written by hand** in the format Prisma generates (the schema-engine binary was unavailable in the development environment). It has been applied and tested on PostgreSQL 17. If `prisma migrate dev` suggests a small diff, it is cosmetic.
 - **`k` is not editable** via the form: it is an internal counter. A teacher opening a student's card does not increment `k`.
 - **"Student's random word"** is picked on the frontend from the already loaded list and doesn't write anything.
 - Expired refresh tokens are cleaned up when the API starts; as load grows, this should be moved to a cron job.

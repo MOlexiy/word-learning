@@ -11,8 +11,9 @@
   },
   "nav": {
     "random": "Random word",
-    "addCard": "Add card",
-    "guest": "Guest"
+    "guest": "Guest",
+    "addWord": "Add word",
+    "addWordForStudent": "Add a word for {{username}}"
   },
   "titles": {
     "cards": "My words",
@@ -72,7 +73,12 @@
     "create": {
       "title": "New card",
       "submit": "Create",
-      "created": "“{{name}}” added"
+      "created": "“{{name}}” added",
+      "fromDraft": "From inbox: “{{word}}”",
+      "draftsLeft": "{{count}} more waiting",
+      "createdNext": "Card created! Fill in the next one ({{count}} left)?",
+      "fillNext": "Fill in →",
+      "inboxDone": "Card created! Your inbox is empty 🎉"
     },
     "detail": {
       "back": "← Back to catalog",
@@ -117,6 +123,23 @@
     "random": {
       "paused": "All cards are on pause. The next one becomes available {{date}}",
       "empty": "No cards yet — add your first one"
+    },
+    "tabs": {
+      "label": "Cards and inbox",
+      "ready": "Ready cards",
+      "inbox": "Inbox"
+    },
+    "search": {
+      "found": "Found: {{count}}"
+    },
+    "duplicates": {
+      "existsTitle": "“{{name}}” already exists",
+      "existsText": "There's no need for a second card with the same word — open the existing one and add to it.",
+      "openExisting": "Open the card",
+      "relatedTitle": "This card may already exist",
+      "relatedText": "“{{name}}” is already listed as a word form on these cards (they open in a new tab). Is it the same card?",
+      "notCreate": "Yes, don't create",
+      "createAnyway": "No, create a new one"
     }
   },
   "speech": {
@@ -190,11 +213,11 @@
     },
     "import": {
       "title": "Guest data in this browser",
-      "found": "Cards found: {{count}}. You can move them to your account together with their random timers.",
+      "found": "Found {{count}} cards and {{drafts}} inbox words. You can move them to your account together with the random timers.",
       "clearAfter": "Remove from this browser after moving",
       "submit": "Move to account",
       "discard": "Delete local cards",
-      "done": "Cards moved: {{count}}"
+      "done": "Moved {{count}} cards and {{drafts}} inbox words"
     }
   },
   "students": {
@@ -205,7 +228,10 @@
     "empty": "This student has no cards yet.",
     "backToStudent": "← {{username}}'s words",
     "anotherRandom": "🎲 Another random word",
-    "readonly": "Read-only"
+    "readonly": "Read-only",
+    "quickAdd": "+ Quick word",
+    "draftsHint": "Words the student saved to turn into cards later. Words you add are marked “from teacher” and you can remove them.",
+    "draftsEmpty": "The student's inbox is empty."
   },
   "validation": {
     "usernameLength": "Username: 3 to 32 characters",
@@ -248,6 +274,58 @@
     "STUDENT_NOT_ACCEPTED": "This student is not among your confirmed students",
     "CONFLICT": "A record with this data already exists",
     "NOT_FOUND": "Not found",
-    "INTERNAL": "Internal server error"
+    "INTERNAL": "Internal server error",
+    "CARD_EXISTS": "A card with this word already exists",
+    "DRAFT_NOT_FOUND": "Inbox word not found"
+  },
+  "drafts": {
+    "empty": "Your inbox is empty. Capture new words on the fly with “+” and turn them into cards later.",
+    "addFirst": "+ Quick-save a word",
+    "fill": "Fill in →",
+    "fillAria": "Fill in a card for “{{word}}”",
+    "delete": "Remove from inbox",
+    "deleteAria": "Remove “{{word}}” from inbox",
+    "share": "Share with teacher",
+    "fromTeacher": "from teacher {{username}}",
+    "removed": "“{{word}}” removed from inbox",
+    "undo": "Undo",
+    "notFound": "This word is no longer in your inbox — the card may already exist.",
+    "back": "← Back to inbox"
+  },
+  "quickAdd": {
+    "title": "Quick-save a word",
+    "titleForStudent": "Quick word for {{username}}",
+    "modeLabel": "How to add",
+    "tabs": {
+      "quick": "Quick",
+      "bulk": "List",
+      "full": "Full card →"
+    },
+    "word": "Word *",
+    "meaning": "Short meaning / translation",
+    "meaningPlaceholder": "optional",
+    "save": "Save",
+    "saveAndNext": "Save & add another",
+    "saved": "“{{word}}” saved to inbox",
+    "savedForStudent": "“{{word}}” added to {{username}}'s inbox",
+    "openInbox": "Inbox →",
+    "skippedDraft": "“{{word}}” is already in the inbox.",
+    "skippedCard": "A card for “{{word}}” already exists.",
+    "openCard": "Open",
+    "bulkLabel": "Words",
+    "bulkPlaceholder": "run, walk, jump\nget over - to recover from",
+    "bulkHint": "Separate with commas or new lines. A “word - meaning” line keeps the meaning too.",
+    "bulkCount": "Words: {{count}}",
+    "bulkSave": "Add ({{count}})",
+    "bulkTooMany": "You can add up to {{max}} words at once.",
+    "bulkSaved": "Added to inbox: {{count}}.",
+    "bulkSkipped": "Skipped (already there): {{words}}",
+    "bulkNothingNew": "Nothing new — all of these are already in the inbox or cards: {{word}}"
+  },
+  "share": {
+    "withTeacher": "↗ Share with teacher",
+    "title": "“{{word}}” — WordLoop",
+    "copied": "Link for your teacher copied",
+    "manual": "Copy this link for your teacher: {{url}}"
   }
 }

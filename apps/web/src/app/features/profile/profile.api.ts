@@ -1,7 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
-import type { StudentSummary, TeacherSummary, UserProfile, WordCard, WordCardSummary } from '@wl/shared';
+import type {
+  AddDraftsResult,
+  DraftInput,
+  StudentSummary,
+  TeacherSummary,
+  UserProfile,
+  WordCard,
+  WordCardSummary,
+  WordDraft,
+} from '@wl/shared';
+import { searchParams } from '../cards/data/api-cards.repository';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileApi {
@@ -39,8 +49,28 @@ export class ProfileApi {
     return this.#http.delete<void>(`/api/teacher/students/${encodeURIComponent(username)}`);
   }
 
-  studentCards(username: string): Observable<WordCardSummary[]> {
-    return this.#http.get<WordCardSummary[]>(`/api/teacher/students/${encodeURIComponent(username)}/cards`);
+  studentCards(username: string, q?: string): Observable<WordCardSummary[]> {
+    return this.#http.get<WordCardSummary[]>(`/api/teacher/students/${encodeURIComponent(username)}/cards`, {
+      params: searchParams(q),
+    });
+  }
+
+  studentDrafts(username: string): Observable<WordDraft[]> {
+    return this.#http.get<WordDraft[]>(`/api/teacher/students/${encodeURIComponent(username)}/drafts`);
+  }
+
+  /** «Швидке слово» для учня: з'явиться в його чернетці з позначкою «від вчителя». */
+  addStudentDrafts(username: string, items: DraftInput[]): Observable<AddDraftsResult> {
+    return this.#http.post<AddDraftsResult>(`/api/teacher/students/${encodeURIComponent(username)}/drafts`, {
+      items,
+    });
+  }
+
+  /** Лише слова, які додав сам вчитель. */
+  removeStudentDraft(username: string, id: string): Observable<void> {
+    return this.#http.delete<void>(
+      `/api/teacher/students/${encodeURIComponent(username)}/drafts/${encodeURIComponent(id)}`,
+    );
   }
 
   studentCard(username: string, id: string): Observable<WordCard> {

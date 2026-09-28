@@ -15,6 +15,7 @@ import type { CardImage, CardInput, WordCard } from '@wl/shared';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ErrorTranslator } from '../../../core/i18n/error-translator.service';
 import { NotifyService } from '../../../core/notify/notify.service';
+import { ShareService } from '../../../core/share/share.service';
 import { CardStorageService } from '../data/card-storage.service';
 import { CardNotFoundError } from '../data/cards.repository';
 import { CardFormComponent } from '../ui/card-form.component';
@@ -78,9 +79,16 @@ import { CardViewComponent } from '../ui/card-view.component';
               </form>
 
               <div class="actions actions--split">
-                <button class="btn btn--primary" type="button" (click)="editing.set(true)">
-                  {{ 'cards.detail.edit' | transloco }}
-                </button>
+                <div class="actions">
+                  <button class="btn btn--primary" type="button" (click)="editing.set(true)">
+                    {{ 'cards.detail.edit' | transloco }}
+                  </button>
+                  @if (share.canShareWithTeacher()) {
+                    <button class="btn" type="button" (click)="share.shareCard(c.id, c.name)">
+                      {{ 'share.withTeacher' | transloco }}
+                    </button>
+                  }
+                </div>
                 <button class="btn btn--danger" type="button" [disabled]="busy()" (click)="remove()">
                   {{ 'cards.detail.delete' | transloco }}
                 </button>
@@ -102,6 +110,7 @@ export class CardDetailPage {
   readonly #transloco = inject(TranslocoService);
   readonly #errors = inject(ErrorTranslator);
   readonly #confirm = inject(ConfirmService);
+  protected readonly share = inject(ShareService);
 
   protected readonly card = signal<WordCard | null>(null);
   protected readonly state = signal<'loading' | 'ready' | 'not-found' | 'error'>('loading');

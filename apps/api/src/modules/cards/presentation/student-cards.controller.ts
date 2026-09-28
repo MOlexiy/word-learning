@@ -1,9 +1,10 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import type { WordCard, WordCardSummary } from '@wl/shared';
 import type { AuthUser } from '../../../common/auth/auth-user';
 import { CurrentUser, Roles } from '../../../common/auth/decorators';
 import { MentorshipService } from '../../users/application/mentorship.service';
 import { CardsService } from '../application/cards.service';
+import { CardSearchQueryDto } from './cards.dto';
 
 /**
  * Read-only перегляд карток підтвердженого учня. Лічильник `k` і прогрес рандому учня
@@ -21,9 +22,10 @@ export class StudentCardsController {
   async list(
     @CurrentUser() teacher: AuthUser,
     @Param('username') username: string,
+    @Query() query: CardSearchQueryDto,
   ): Promise<WordCardSummary[]> {
     const student = await this.mentorship.assertAcceptedStudent(teacher.username, username);
-    return this.cards.listForStudent(student);
+    return this.cards.listForStudent(student, query.q);
   }
 
   @Get(':id')

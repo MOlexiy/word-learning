@@ -1,9 +1,17 @@
 import { computed, inject, Injectable } from '@angular/core';
-import type { CardImage, CardInput, RandomPickResult, WordCard, WordCardSummary } from '@wl/shared';
+import type {
+  CardDuplicateCheck,
+  CardImage,
+  CardInput,
+  RandomPickResult,
+  WordCard,
+  WordCardSummary,
+} from '@wl/shared';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ApiCardsRepository } from './api-cards.repository';
-import type { CardsRepository } from './cards.repository';
+import type { CardsRepository, CreateCardOptions } from './cards.repository';
 import { LocalCardsRepository } from './local-cards.repository';
+import { LocalDraftsRepository } from './local-drafts.repository';
 
 export type StorageMode = 'guest' | 'account';
 
@@ -16,12 +24,17 @@ export class CardStorageService implements CardsRepository {
   readonly #auth = inject(AuthService);
   readonly #local = inject(LocalCardsRepository);
   readonly #api = inject(ApiCardsRepository);
+  readonly #localDrafts = inject(LocalDraftsRepository);
 
   readonly mode = computed<StorageMode>(() => (this.#auth.isAuthenticated() ? 'account' : 'guest'));
   readonly #repo = computed<CardsRepository>(() => (this.mode() === 'account' ? this.#api : this.#local));
 
-  list(): Promise<WordCardSummary[]> {
-    return this.#repo().list();
+  list(q?: string): Promise<WordCardSummary[]> {
+    return this.#repo().list(q);
+  }
+
+  checkDuplicates(name: string): Promise<CardDuplicateCheck> {
+    return this.#repo().checkDuplicates(name);
   }
 
   get(id: string): Promise<WordCard> {
@@ -32,8 +45,11 @@ export class CardStorageService implements CardsRepository {
     return this.#repo().view(id);
   }
 
-  create(input: CardInput): Promise<WordCard> {
-    return this.#repo().create(input);
+  /** API видаляє чернетку в тій самій транзакції; у гостя — одразу після створення картки. */
+  async create(input: CardInput, options: CreateCardOptions = {}): Promise<WordCard> {
+    const card = await this.#repo().create(input, options);
+    if (this.mode() === 'guest' && options.fromDraftId) await this.#localDrafts.remove(options.fromDraftId);
+    return card;
   }
 
   update(id: string, input: CardInput): Promise<WordCard> {
@@ -65,16 +81,21 @@ export class CardStorageService implements CardsRepository {
     return this.#local.count();
   }
 
-  /** Переносить гостьові картки з інтервалами в БД. */
-  async importGuestData({ clearAfter }: { clearAfter: boolean }): Promise<number> {
-    const payload = this.#local.exportForImport();
-    if (!payload.cards.length) return 0;
-    const { imported } = await this.#api.import(payload);
-    if (clearAfter) this.#local.clear();
-    return imported;
+  guestDraftCount(): number {
+    return this.#localDrafts.count();
+  }
+
+  /** Переносить гостьові картки з інтервалами та чернетку в БД. */
+  async importGuestData({ clearAfter }: { clearAfter: boolean }): Promise<{ cards: number; drafts: number }> {
+    const payload = { ...this.#local.exportForImport(), drafts: this.#localDrafts.exportForImport() };
+    if (!payload.cards.length && !payload.drafts.length) return { cards: 0, drafts: 0 };
+    const { imported, importedDrafts } = await this.#api.import(payload);
+    if (clearAfter) this.clearGuestData();
+    return { cards: imported, drafts: importedDrafts };
   }
 
   clearGuestData(): void {
     this.#local.clear();
+    this.#localDrafts.clear();
   }
 }

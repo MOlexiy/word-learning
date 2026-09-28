@@ -916,3 +916,368 @@ html[lang='en'] .boot__slow[lang='uk'] {
     animation-duration: 2.4s;
   }
 }
+
+/* ---------- Сегментований перемикач (вкладки сторінки, режими швидкого додавання) ---------- */
+.page-head--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+.page-head--stack + .alert {
+  margin-top: 12px;
+}
+/* Сторінки не є grid-контейнерами, тож відступи навколо пошуку задаємо явно. */
+wl-card-search {
+  display: block;
+  margin: 12px 0 16px;
+}
+.page-head__sub {
+  margin: 0;
+}
+.seg {
+  display: inline-flex;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.seg__item {
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.seg__item:hover {
+  color: var(--text);
+}
+.seg__item.is-active {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+.seg__item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.seg__count {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.seg__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.seg__item.is-active .seg__badge {
+  background: var(--primary-contrast);
+  color: var(--primary);
+}
+@media (max-width: 600px) {
+  .seg--page {
+    display: flex;
+    width: 100%;
+  }
+}
+
+/* ---------- Пошук ---------- */
+.search-bar {
+  position: relative;
+}
+.search-bar__icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  transform: translateY(-55%);
+  pointer-events: none;
+}
+.search-bar__input {
+  min-height: 44px;
+  padding-inline: 40px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+.search-bar__spinner {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  margin-top: -9px;
+  color: var(--primary);
+}
+.results-note {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+/* ---------- Чернетка (Inbox) ---------- */
+.draft-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.draft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.2s;
+}
+.draft:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+.draft.is-highlighted {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+.draft__text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+.draft__word {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.draft__meaning {
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.draft__from {
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.draft__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+.icon-btn:hover:not(:disabled) {
+  border-color: var(--border);
+  color: var(--text);
+}
+.icon-btn--danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.icon-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Шторка швидкого додавання ---------- */
+.sheet {
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(90dvh, 720px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.35);
+  overscroll-behavior: contain;
+}
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(2px);
+}
+.sheet[open] {
+  animation: confirm-in 0.15s ease-out;
+}
+.sheet__body {
+  display: grid;
+  gap: 16px;
+  padding: 18px 20px 20px;
+}
+.sheet__grip {
+  display: none;
+}
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sheet__title {
+  margin: 0;
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+.sheet .seg {
+  display: flex;
+  width: 100%;
+}
+.sheet .seg__item {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  line-height: 1.15;
+  text-align: center;
+  white-space: normal;
+}
+.sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.stack--tight {
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  /* Шторка знизу: поле і кнопки — під великим пальцем. */
+  .sheet {
+    width: 100%;
+    max-width: none;
+    margin: auto 0 0;
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+  }
+  .sheet[open] {
+    animation: sheet-up 0.2s ease-out;
+  }
+  .sheet__body {
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .sheet__grip {
+    display: block;
+    justify-self: center;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+  .sheet__actions > .btn {
+    flex: 1 1 auto;
+    min-height: 46px;
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Тости з дією, посилання у вікні підтвердження ---------- */
+.toast__message {
+  flex: 1;
+}
+.toast__action {
+  flex: none;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.toast__action:hover {
+  background: color-mix(in srgb, currentColor 26%, transparent);
+}
+.confirm-dialog__actions {
+  flex-wrap: wrap;
+}
+.confirm-dialog__actions .btn {
+  height: auto;
+  padding-block: 8px;
+  white-space: normal;
+  text-align: center;
+}
+.confirm-dialog__links {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.confirm-dialog__links li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.confirm-dialog__links a {
+  font-weight: 600;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.confirm-dialog__links a:hover {
+  text-decoration: underline;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet[open] {
+    animation: none;
+  }
+}

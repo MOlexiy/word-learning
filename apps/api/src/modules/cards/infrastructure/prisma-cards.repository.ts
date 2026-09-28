@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type { CardImage, CardInput, RandomProgress, WordCardSummary } from '@wl/shared';
+import {
+  CARD_SEARCH_FIELDS,
+  type CardImage,
+  type CardInput,
+  type CardWordForms,
+  type DraftInput,
+  type RandomProgress,
+  searchCards,
+  type WordCardSummary,
+} from '@wl/shared';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { type CardRecord, CardsRepository, type ImportedCard } from '../domain/cards.repository';
 
@@ -24,12 +33,49 @@ export class PrismaCardsRepository extends CardsRepository {
     });
   }
 
+  /**
+   * SQL звужує вибірку (ILIKE по name, n, v, adj, adv; Prisma екранує % і _), а порядок
+   * рахує спільна функція `searchCards` — так само, як у гостьовому режимі.
+   * Клієнту віддаємо лише id і name.
+   */
+  async search(userId: string, q: string): Promise<WordCardSummary[]> {
+    const query = q.trim().replace(/\s+/g, ' ');
+    const rows = await this.prisma.wordCard.findMany({
+      where: {
+        userId,
+        OR: CARD_SEARCH_FIELDS.map((field) => ({
+          [field]: { contains: query, mode: 'insensitive' as const },
+        })),
+      },
+      select: WORD_FORMS_SELECT,
+    });
+    return searchCards(rows, query).map(({ id, name }) => ({ id, name }));
+  }
+
+  findWordFormCandidates(userId: string, word: string): Promise<CardWordForms[]> {
+    const contains = { contains: word.trim(), mode: 'insensitive' as const };
+    return this.prisma.wordCard.findMany({
+      where: {
+        userId,
+        OR: [{ name: contains }, { n: contains }, { v: contains }, { adj: contains }, { adv: contains }],
+      },
+      select: WORD_FORMS_SELECT,
+      orderBy: { name: 'asc' },
+    });
+  }
+
   findById(id: string): Promise<CardRecord | null> {
     return this.prisma.wordCard.findUnique({ where: { id } });
   }
 
-  create(userId: string, input: CardInput): Promise<CardRecord> {
-    return this.prisma.wordCard.create({ data: { ...input, userId } });
+  create(userId: string, input: CardInput, fromDraftId?: string): Promise<CardRecord> {
+    if (!fromDraftId) return this.prisma.wordCard.create({ data: { ...input, userId } });
+    return this.prisma.$transaction(async (tx) => {
+      const card = await tx.wordCard.create({ data: { ...input, userId } });
+      // deleteMany: чужа чи вже видалена чернетка просто ігнорується.
+      await tx.wordDraft.deleteMany({ where: { id: fromDraftId, userId } });
+      return card;
+    });
   }
 
   update(id: string, input: CardInput): Promise<CardRecord> {
@@ -100,7 +146,11 @@ export class PrismaCardsRepository extends CardsRepository {
     return result._min.lockedUntil;
   }
 
-  importMany(userId: string, cards: ImportedCard[]): Promise<number> {
+  importMany(
+    userId: string,
+    cards: ImportedCard[],
+    drafts: DraftInput[],
+  ): Promise<{ cards: number; drafts: number }> {
     const rows = cards.map(({ progress, image, imageHidden, ...card }) => ({
       id: randomUUID(),
       card: { ...card, ...imageColumns(image, imageHidden) },
@@ -112,10 +162,13 @@ export class PrismaCardsRepository extends CardsRepository {
         p ? [{ cardId: id, repetitionStep: p.n, lockedUntil: new Date(p.lockedUntil) }] : [],
       );
       if (progress.length) await tx.cardRandomProgress.createMany({ data: progress });
-      return rows.length;
+      if (drafts.length) await tx.wordDraft.createMany({ data: drafts.map((d) => ({ ...d, userId })) });
+      return { cards: rows.length, drafts: drafts.length };
     });
   }
 }
+
+const WORD_FORMS_SELECT = { id: true, name: true, n: true, v: true, adj: true, adv: true } as const;
 
 function imageColumns(image: CardImage | null, hidden: boolean) {
   return {

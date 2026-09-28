@@ -39,10 +39,22 @@ const QUOTE_MAX = 180;
             @if (p.messageKey) {
               <p class="confirm-dialog__message">{{ p.messageKey | transloco: p.params }}</p>
             }
+            @if (p.links?.length) {
+              <ul class="confirm-dialog__links">
+                @for (link of p.links; track link.href) {
+                  <li>
+                    <a [href]="link.href" target="_blank" rel="noopener" lang="en">{{ link.label }} ↗</a>
+                    @if (link.hint) {
+                      <span class="muted">{{ link.hint }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
           </div>
           <div class="confirm-dialog__actions">
             <button #cancelBtn type="button" class="btn btn--ghost" (click)="confirm.settle(false)">
-              {{ 'confirm.cancel' | transloco }}
+              {{ p.cancelKey ?? 'confirm.cancel' | transloco: p.params }}
             </button>
             <button
               type="button"
@@ -51,7 +63,7 @@ const QUOTE_MAX = 180;
               [class.btn--primary]="!p.danger"
               (click)="confirm.settle(true)"
             >
-              {{ p.confirmKey ?? 'confirm.delete' | transloco }}
+              {{ p.confirmKey ?? 'confirm.delete' | transloco: p.params }}
             </button>
           </div>
         </div>
