@@ -2,7 +2,7 @@
 export const APP_LANGS = ['ua', 'en'] as const;
 export type AppLang = (typeof APP_LANGS)[number];
 
-export const DEFAULT_LANG: AppLang = 'ua';
+export const DEFAULT_LANG: AppLang = 'en';
 
 /** `ua` — назва файлу за вимогою; для HTML/Intl потрібен ISO 639-1 код `uk`. */
 export const LANG_META: Record<AppLang, { htmlLang: string; locale: string }> = {
