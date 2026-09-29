@@ -12,7 +12,7 @@ const STORAGE_KEY = 'wl.lang';
 /** Стандартні повідомлення Zod (min/max тощо) теж локалізуємо. Власні — це i18n-ключі `validation.*`. */
 const ZOD_LOCALES: Record<AppLang, () => Parameters<typeof z.config>[0]> = { ua: uk, en };
 
-/** Активна мова: вибір користувача (LocalStorage) → мова браузера → українська. */
+/** Активна мова: вибір користувача (LocalStorage) → DEFAULT_LANG. */
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   readonly #transloco = inject(TranslocoService);
@@ -43,12 +43,9 @@ export class LanguageService {
     z.config(ZOD_LOCALES[lang]());
   }
 
+  /** Мову браузера не вгадуємо: без збереженого вибору — завжди DEFAULT_LANG. */
   #detect(): AppLang {
     const stored = this.#storage.read(STORAGE_KEY);
-    if (isAppLang(stored)) return stored;
-    const browser = globalThis.navigator?.languages ?? [];
-    if (browser.some((l) => l.toLowerCase().startsWith('uk'))) return 'ua';
-    if (browser.some((l) => l.toLowerCase().startsWith('en'))) return 'en';
-    return DEFAULT_LANG;
+    return isAppLang(stored) ? stored : DEFAULT_LANG;
   }
 }
