@@ -76,18 +76,18 @@ import { CollocationLinksComponent } from './collocation-links.component';
         }
       </div>
 
-      <fieldset class="field" formArrayName="topic">
+      <fieldset class="field">
         <legend class="field__label">
           {{ (mode() === 'create' ? 'cards.form.topicFirst' : 'cards.form.topics') | transloco }}
         </legend>
-        @for (control of form.controls.topic.controls; track $index; let i = $index) {
+        @for (control of form.controls.topic.controls; track control; let i = $index) {
           <div class="topic-edit">
             <textarea
               class="input"
               rows="3"
               [id]="'card-topic-' + i"
               [attr.name]="'topic-' + i"
-              [formControlName]="i"
+              [formControl]="control"
               [attr.aria-label]="('cards.form.topics' | transloco) + ' ' + (i + 1)"
             ></textarea>
             @if (mode() === 'edit') {
