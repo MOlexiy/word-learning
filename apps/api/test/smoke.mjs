@@ -328,6 +328,36 @@ await check('картка з чернетки: чернетка зникає; в
   assert.equal((await student.call('DELETE', `/cards/${card.body.id}`)).status, 204);
 });
 
+await check('посилання «додати в чернетку» без входу: додає, чистить текст, перевипускається', async () => {
+  const link = await student.call('GET', '/drafts/link');
+  assert.equal(link.status, 200);
+  const { token } = link.body;
+  assert.match(token, /^[A-Za-z0-9_-]{32}$/);
+  assert.equal((await student.call('GET', '/drafts/link')).body.token, token, 'токен стабільний');
+  assert.equal((await createClient().call('GET', '/drafts/link')).status, 401);
+
+  const add = (t, text) => fetch(`${API}/drafts/add/${t}?text=${encodeURIComponent(text)}`);
+  const first = await add(token, '«Get over.»');
+  assert.equal(first.status, 200);
+  assert.match(first.headers.get('content-type') ?? '', /text\/html/);
+  assert.equal((await add(token, 'get over')).status, 200, 'повтор — не помилка, просто пропуск');
+  assert.equal((await add(token, '  ,. ')).status, 400);
+  assert.equal((await add('unknown-token-000000', 'x')).status, 404);
+
+  const drafts = (await student.call('GET', '/drafts')).body;
+  const added = drafts.filter((d) => d.word === 'Get over');
+  assert.equal(added.length, 1);
+
+  const fresh = (await student.call('POST', '/drafts/link')).body.token;
+  assert.notEqual(fresh, token);
+  assert.equal((await add(token, 'old')).status, 404, 'старе посилання більше не працює');
+  assert.equal((await add(fresh, 'new')).status, 200);
+
+  for (const d of (await student.call('GET', '/drafts')).body) {
+    assert.equal((await student.call('DELETE', `/drafts/${d.id}`)).status, 204);
+  }
+});
+
 await check('відкріплення → rejected, доступ зникає, учень може подати знову', async () => {
   assert.equal((await teacher.call('DELETE', `/teacher/students/${S}`)).status, 204);
   assert.equal((await student.call('GET', '/auth/me')).body.teacher.status, 'rejected');

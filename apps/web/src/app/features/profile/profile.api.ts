@@ -4,6 +4,7 @@ import type { Observable } from 'rxjs';
 import type {
   AddDraftsResult,
   DraftInput,
+  DraftLink,
   StudentSummary,
   TeacherSummary,
   UserProfile,
@@ -16,6 +17,16 @@ import { searchParams } from '../cards/data/api-cards.repository';
 @Injectable({ providedIn: 'root' })
 export class ProfileApi {
   readonly #http = inject(HttpClient);
+
+  /** Персональне посилання «додати в чернетку» без входу (створюється при першому зверненні). */
+  draftLink(): Observable<DraftLink> {
+    return this.#http.get<DraftLink>('/api/drafts/link');
+  }
+
+  /** Новий токен — старе посилання перестає працювати. */
+  regenerateDraftLink(): Observable<DraftLink> {
+    return this.#http.post<DraftLink>('/api/drafts/link', null);
+  }
 
   searchTeachers(query: string): Observable<TeacherSummary[]> {
     return this.#http.get<TeacherSummary[]>('/api/teachers', { params: { query } });

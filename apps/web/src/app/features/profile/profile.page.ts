@@ -2,13 +2,21 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
+import { DraftLinkComponent } from './draft-link.component';
 import { GuestImportComponent } from './guest-import.component';
 import { StudentPanelComponent } from './student-panel.component';
 import { TeacherPanelComponent } from './teacher-panel.component';
 
 @Component({
   selector: 'wl-profile-page',
-  imports: [RouterLink, TranslocoPipe, StudentPanelComponent, TeacherPanelComponent, GuestImportComponent],
+  imports: [
+    RouterLink,
+    TranslocoPipe,
+    StudentPanelComponent,
+    TeacherPanelComponent,
+    GuestImportComponent,
+    DraftLinkComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>{{ 'profile.title' | transloco }}</h1>
@@ -34,6 +42,8 @@ import { TeacherPanelComponent } from './teacher-panel.component';
       } @else {
         <wl-teacher-panel />
       }
+
+      <wl-draft-link />
     } @else {
       <section class="panel">
         <p>{{ 'profile.guestText' | transloco }}</p>

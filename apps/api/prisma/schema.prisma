@@ -36,6 +36,7 @@ model User {
   refreshTokens RefreshToken[]
   drafts        WordDraft[]    @relation("DraftOwner")
   addedDrafts   WordDraft[]    @relation("DraftAuthor")
+  draftLink     DraftLink?
 
   @@index([teacherId, teacherStatus])
   @@map("users")
@@ -85,6 +86,18 @@ model WordDraft {
 
   @@index([userId, createdAt])
   @@map("word_drafts")
+}
+
+/// Персональне посилання «додати в чернетку» без входу (для читалок, словників тощо).
+/// Токен дає лише одне право — додати слово в чернетку власника; його можна перевипустити.
+model DraftLink {
+  token     String   @id @db.VarChar(64)
+  userId    String   @unique @map("user_id") @db.VarChar(32)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [username], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("draft_links")
 }
 
 /// Стан інтервального рандому. Відсутній рядок = картка ще не випадала (крок 1, доступна).

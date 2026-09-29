@@ -218,6 +218,20 @@
       "submit": "Move to account",
       "discard": "Delete local cards",
       "done": "Moved {{count}} cards and {{drafts}} inbox words"
+    },
+    "draftLink": {
+      "title": "Add words from a reading app",
+      "text": "Paste this link into your reading app as a custom dictionary (like google.com/search?q=define:{text}). Select a word or phrase → “dictionary”, and it goes straight to your inbox — no sign-in needed.",
+      "label": "Link for your reading app",
+      "hint": "The reading app replaces {{placeholder}} with the selected text. The link is personal: anyone who has it can add words to your inbox.",
+      "copy": "Copy",
+      "copied": "Link copied",
+      "regenerate": "New link",
+      "regenerateTitle": "Create a new link?",
+      "regenerateText": "The old link will stop working — you'll need to replace it in your reading app.",
+      "regenerateConfirm": "Create new",
+      "regenerated": "New link is ready — update it in your reading app",
+      "retry": "Try again"
     }
   },
   "students": {
@@ -276,7 +290,8 @@
     "NOT_FOUND": "Not found",
     "INTERNAL": "Internal server error",
     "CARD_EXISTS": "A card with this word already exists",
-    "DRAFT_NOT_FOUND": "Inbox word not found"
+    "DRAFT_NOT_FOUND": "Inbox word not found",
+    "DRAFT_LINK_INVALID": "The add-word link is invalid"
   },
   "drafts": {
     "empty": "Your inbox is empty. Capture new words on the fly with “+” and turn them into cards later.",

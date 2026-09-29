@@ -75,3 +75,20 @@ export function parseBulkDrafts(text: string): DraftInput[] {
   }
   return result;
 }
+
+/** Персональне посилання «додати в чернетку» без входу — для читалок і словників. */
+export interface DraftLink {
+  token: string;
+}
+
+/**
+ * Виділений у книжці фрагмент → слово для чернетки: зайві пробіли / переноси рядків
+ * та розділові знаки по краях («word,» → «word»; «"get over."» → «get over»).
+ */
+export function cleanSelectedText(text: string): string {
+  return text
+    .replace(/\u00ad/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s\p{P}\p{S}]+|[\s\p{P}\p{S}]+$/gu, '')
+    .trim();
+}
