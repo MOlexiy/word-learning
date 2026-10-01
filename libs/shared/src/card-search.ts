@@ -62,6 +62,11 @@ export function normalizeCardName(name: string): string {
   return normalizeSearchText(name).replace(LEADING_PARTICLE, '');
 }
 
+/** Чи це інше слово (а не та сама назва з іншим регістром / пробілами / «to»). */
+export function isCardNameChanged(previous: string, next: string): boolean {
+  return normalizeCardName(previous) !== normalizeCardName(next);
+}
+
 export interface CardDuplicateRelated {
   id: string;
   name: string;
@@ -76,9 +81,19 @@ export interface CardDuplicateCheck {
   related: CardDuplicateRelated[];
 }
 
-export function findCardDuplicates(name: string, cards: readonly CardWordForms[]): CardDuplicateCheck {
+/**
+ * `name` порівнюється з назвами карток (`exact`) і з кожним варіантом у n / v / adj / adv
+ * (`related`): «purposeful, all-purpose / multi-purpose» дає збіг і для «multi-purpose».
+ * `excludeId` — картка, яку редагують: сама з собою вона не дублікат.
+ */
+export function findCardDuplicates(
+  name: string,
+  allCards: readonly CardWordForms[],
+  excludeId?: string,
+): CardDuplicateCheck {
   const target = normalizeCardName(name);
   if (!target) return { exact: null, related: [] };
+  const cards = excludeId ? allCards.filter((card) => card.id !== excludeId) : allCards;
   const exactCard = cards.find((card) => normalizeCardName(card.name) === target);
   const related = cards.flatMap((card) => {
     if (card === exactCard) return [];
@@ -89,4 +104,33 @@ export function findCardDuplicates(name: string, cards: readonly CardWordForms[]
     exact: exactCard ? { id: exactCard.id, name: exactCard.name } : null,
     related: related.sort((a, b) => a.name.localeCompare(b.name)),
   };
+}
+
+/** Результат перевірки одного слова зі списку. */
+export interface CardWordDuplicates extends CardDuplicateCheck {
+  /** Слово так, як його надіслали. */
+  word: string;
+}
+
+/** POST /cards/duplicates — лише слова, для яких щось знайшлося (порядок як у запиті). */
+export interface CardDuplicatesBatchResult {
+  items: CardWordDuplicates[];
+}
+
+/**
+ * Перевірка списку слів (Bulk Add, швидке слово) за один прохід по картках.
+ * Повтори (після нормалізації) перевіряються один раз; слова без збігів не повертаються.
+ */
+export function findDuplicatesForWords(
+  words: readonly string[],
+  cards: readonly CardWordForms[],
+): CardWordDuplicates[] {
+  const seen = new Set<string>();
+  return words.flatMap((word) => {
+    const key = normalizeCardName(word);
+    if (!key || seen.has(key)) return [];
+    seen.add(key);
+    const check = findCardDuplicates(word, cards);
+    return check.exact || check.related.length ? [{ word, ...check }] : [];
+  });
 }

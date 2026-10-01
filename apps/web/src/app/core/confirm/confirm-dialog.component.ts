@@ -41,7 +41,7 @@ const QUOTE_MAX = 180;
             }
             @if (p.links?.length) {
               <ul class="confirm-dialog__links">
-                @for (link of p.links; track link.href) {
+                @for (link of p.links; track $index) {
                   <li>
                     <a [href]="link.href" target="_blank" rel="noopener" lang="en">{{ link.label }} ↗</a>
                     @if (link.hint) {
@@ -56,6 +56,11 @@ const QUOTE_MAX = 180;
             <button #cancelBtn type="button" class="btn btn--ghost" (click)="confirm.settle(false)">
               {{ p.cancelKey ?? 'confirm.cancel' | transloco: p.params }}
             </button>
+            @if (p.altKey) {
+              <button type="button" class="btn" (click)="confirm.settle('alt')">
+                {{ p.altKey | transloco: p.params }}
+              </button>
+            }
             <button
               type="button"
               class="btn"

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { normalizeCardName } from '../card-search';
+import { type CardDuplicateRelated, normalizeCardName } from '../card-search';
 
 /**
  * Чернетка («Inbox»): швидко збережене слово з необов'язковим коротким значенням,
@@ -38,9 +38,17 @@ export interface SkippedDraft {
   cardId?: string;
 }
 
+/** Додане слово, яке вже записане як n / v / adj / adv інших карток (перевірити під час заповнення). */
+export interface DraftRelated {
+  word: string;
+  related: CardDuplicateRelated[];
+}
+
 export interface AddDraftsResult {
   created: WordDraft[];
   skipped: SkippedDraft[];
+  /** Серед доданих — слова, що вже є у формах інших карток (додаються, але з попередженням). */
+  related: DraftRelated[];
 }
 
 /** Роздільник «слово — значення» у рядку Bulk Add: « - », « — », « – », табуляція або двокрапка. */

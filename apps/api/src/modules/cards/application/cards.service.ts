@@ -1,10 +1,13 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   type CardDuplicateCheck,
+  type CardDuplicatesBatchResult,
   type CardImage,
   type CardInput,
   findCardDuplicates,
+  findDuplicatesForWords,
   type ImportCardsRequest,
+  isCardNameChanged,
   type ImportCardsResult,
   type WordCard,
   type WordCardSummary,
@@ -26,9 +29,15 @@ export class CardsService {
   /**
    * Чи є вже така картка: `exact` — та сама назва (створити не можна),
    * `related` — слово записане як n / v / adj / adv інших карток (варто перепитати).
+   * `excludeId` — картка, яку редагують (не порівнюється сама з собою).
    */
-  async checkDuplicates(userId: string, name: string): Promise<CardDuplicateCheck> {
-    return findCardDuplicates(name, await this.cards.findWordFormCandidates(userId, name));
+  async checkDuplicates(userId: string, name: string, excludeId?: string): Promise<CardDuplicateCheck> {
+    return findCardDuplicates(name, await this.cards.findWordFormCandidates(userId, name), excludeId);
+  }
+
+  /** Те саме для списку слів (Bulk Add / швидке слово); повертає лише слова зі збігами. */
+  async checkDuplicatesMany(userId: string, names: string[]): Promise<CardDuplicatesBatchResult> {
+    return { items: findDuplicatesForWords(names, await this.cards.listWordForms(userId)) };
   }
 
   async get(userId: string, id: string): Promise<WordCard> {
@@ -43,17 +52,17 @@ export class CardsService {
 
   /** Друга картка з тією самою назвою заборонена (409 CARD_EXISTS з id наявної). */
   async create(userId: string, input: CardInput, fromDraftId?: string): Promise<WordCard> {
-    const { exact } = await this.checkDuplicates(userId, input.name);
-    if (exact) {
-      throw new ApiException(HttpStatus.CONFLICT, 'CARD_EXISTS', `Card "${exact.name}" already exists`, {
-        meta: { cardId: exact.id, name: exact.name },
-      });
-    }
+    await this.#assertNameFree(userId, input.name);
     return toWordCard(await this.cards.create(userId, input, fromDraftId));
   }
 
+  /**
+   * Перейменувати на назву іншої картки не можна (409 CARD_EXISTS). Перевіряється лише при зміні
+   * назви — старі дублікати (напр. з імпорту) не блокують редагування інших полів.
+   */
   async update(userId: string, id: string, input: CardInput): Promise<WordCard> {
-    await this.#getOwned(userId, id);
+    const current = await this.#getOwned(userId, id);
+    if (isCardNameChanged(current.name, input.name)) await this.#assertNameFree(userId, input.name, id);
     return toWordCard(await this.cards.update(id, input));
   }
 
@@ -98,6 +107,15 @@ export class CardsService {
 
   async getForStudent(studentUsername: string, id: string): Promise<WordCard> {
     return toWordCard(await this.#getOwned(studentUsername, id));
+  }
+
+  async #assertNameFree(userId: string, name: string, excludeId?: string): Promise<void> {
+    const { exact } = await this.checkDuplicates(userId, name, excludeId);
+    if (exact) {
+      throw new ApiException(HttpStatus.CONFLICT, 'CARD_EXISTS', `Card "${exact.name}" already exists`, {
+        meta: { cardId: exact.id, name: exact.name },
+      });
+    }
   }
 
   async #getOwned(userId: string, id: string): Promise<CardRecord> {

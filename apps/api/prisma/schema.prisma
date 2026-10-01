@@ -76,6 +76,8 @@ model WordDraft {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.VarChar(32)
   word      String   @db.VarChar(200)
+  /// normalizeCardName(word): одне слово — один запис у чернетці власника.
+  wordKey   String   @map("word_key") @db.VarChar(200)
   meaning   String   @default("") @db.VarChar(500)
   /// Вчитель, який додав слово учню; null — учень додав сам.
   addedBy   String?  @map("added_by") @db.VarChar(32)
@@ -84,6 +86,7 @@ model WordDraft {
   user   User  @relation("DraftOwner", fields: [userId], references: [username], onDelete: Cascade, onUpdate: Cascade)
   author User? @relation("DraftAuthor", fields: [addedBy], references: [username], onDelete: SetNull, onUpdate: Cascade)
 
+  @@unique([userId, wordKey])
   @@index([userId, createdAt])
   @@map("word_drafts")
 }

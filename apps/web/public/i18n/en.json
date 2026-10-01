@@ -71,6 +71,9 @@
       "addFirst": "+ Add your first card"
     },
     "create": {
+      "draftHasCard": "The card “{{word}}” already exists — no need for a second one. You can remove the word from the inbox.",
+      "draftRelated": "“{{word}}” is already listed as a word form on these cards. If it's the same word, remove it from the inbox.",
+      "removeDraft": "Remove from inbox",
       "title": "New card",
       "submit": "Create",
       "created": "“{{name}}” added",
@@ -139,7 +142,15 @@
       "relatedTitle": "This card may already exist",
       "relatedText": "“{{name}}” is already listed as a word form on these cards (they open in a new tab). Is it the same card?",
       "notCreate": "Yes, don't create",
-      "createAnyway": "No, create a new one"
+      "createAnyway": "No, create a new one",
+      "notSave": "Yes, don't save",
+      "saveAnyway": "No, save",
+      "notAdd": "Yes, don't add",
+      "addAnyway": "No, add it",
+      "listTitle": "Some words are already on other cards",
+      "listText": "These words ({{count}}) are already listed as word forms on the cards below (they open in a new tab): {{words}}. Add them to the inbox?",
+      "listWithout": "Add without them",
+      "listAll": "Add all"
     }
   },
   "speech": {

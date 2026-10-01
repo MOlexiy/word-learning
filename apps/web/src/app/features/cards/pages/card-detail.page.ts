@@ -11,13 +11,14 @@ import {
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import type { CardImage, CardInput, WordCard } from '@wl/shared';
+import { type CardImage, type CardInput, isCardNameChanged, type WordCard } from '@wl/shared';
 import { ConfirmService } from '../../../core/confirm/confirm.service';
 import { ErrorTranslator } from '../../../core/i18n/error-translator.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { ShareService } from '../../../core/share/share.service';
 import { CardStorageService } from '../data/card-storage.service';
-import { CardNotFoundError } from '../data/cards.repository';
+import { CardExistsError, CardNotFoundError } from '../data/cards.repository';
+import { CardDuplicatePrompts } from '../ui/card-duplicate-prompts.service';
 import { CardFormComponent } from '../ui/card-form.component';
 import { CardViewComponent } from '../ui/card-view.component';
 
@@ -110,6 +111,7 @@ export class CardDetailPage {
   readonly #transloco = inject(TranslocoService);
   readonly #errors = inject(ErrorTranslator);
   readonly #confirm = inject(ConfirmService);
+  readonly #duplicates = inject(CardDuplicatePrompts);
   protected readonly share = inject(ShareService);
 
   protected readonly card = signal<WordCard | null>(null);
@@ -142,11 +144,37 @@ export class CardDetailPage {
     });
   }
 
+  /**
+   * Якщо назву змінено — та сама перевірка дублікатів, що й при створенні (без самої картки):
+   * назва іншої картки — не зберігаємо; слово у формах інших карток — перепитуємо.
+   */
   protected async save(input: CardInput): Promise<void> {
+    const id = this.id();
+    const current = this.card();
     await this.#run(async () => {
-      this.card.set(await this.#storage.update(this.id(), input));
-      this.editing.set(false);
-      this.#notify.success(this.#transloco.translate('cards.detail.saved'));
+      try {
+        if (current && isCardNameChanged(current.name, input.name)) {
+          const duplicates = await this.#storage.checkDuplicates(input.name, id);
+          if (duplicates.exact) {
+            await this.#duplicates.offerExisting(duplicates.exact.id, duplicates.exact.name);
+            return;
+          }
+          if (
+            duplicates.related.length &&
+            !(await this.#duplicates.confirmRelated(input.name, duplicates.related, 'save'))
+          ) {
+            return;
+          }
+        }
+        const card = await this.#storage.update(id, input);
+        if (id !== this.id()) return;
+        this.card.set(card);
+        this.editing.set(false);
+        this.#notify.success(this.#transloco.translate('cards.detail.saved'));
+      } catch (error: unknown) {
+        if (!(error instanceof CardExistsError)) throw error;
+        await this.#duplicates.offerExisting(error.cardId, error.cardName);
+      }
     });
   }
 

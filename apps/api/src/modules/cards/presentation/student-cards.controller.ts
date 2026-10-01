@@ -1,10 +1,20 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
-import type { WordCard, WordCardSummary } from '@wl/shared';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import type { CardDuplicatesBatchResult, WordCard, WordCardSummary } from '@wl/shared';
 import type { AuthUser } from '../../../common/auth/auth-user';
 import { CurrentUser, Roles } from '../../../common/auth/decorators';
 import { MentorshipService } from '../../users/application/mentorship.service';
 import { CardsService } from '../application/cards.service';
-import { CardSearchQueryDto } from './cards.dto';
+import { CardDuplicatesBatchDto, CardSearchQueryDto } from './cards.dto';
 
 /**
  * Read-only перегляд карток підтвердженого учня. Лічильник `k` і прогрес рандому учня
@@ -26,6 +36,18 @@ export class StudentCardsController {
   ): Promise<WordCardSummary[]> {
     const student = await this.mentorship.assertAcceptedStudent(teacher.username, username);
     return this.cards.listForStudent(student, query.q);
+  }
+
+  /** Перевірка слів перед «швидким словом» для учня — по картках учня. */
+  @Post('duplicates')
+  @HttpCode(HttpStatus.OK)
+  async duplicatesMany(
+    @CurrentUser() teacher: AuthUser,
+    @Param('username') username: string,
+    @Body() dto: CardDuplicatesBatchDto,
+  ): Promise<CardDuplicatesBatchResult> {
+    const student = await this.mentorship.assertAcceptedStudent(teacher.username, username);
+    return this.cards.checkDuplicatesMany(student, dto.names);
   }
 
   @Get(':id')

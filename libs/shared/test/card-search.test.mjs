@@ -6,6 +6,8 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   findCardDuplicates,
+  findDuplicatesForWords,
+  isCardNameChanged,
   parseBulkDrafts,
   searchCards,
   wordFormTokens,
@@ -66,9 +68,65 @@ describe('findCardDuplicates', () => {
   it('частина слова — не дублікат', () => {
     assert.deepEqual(findCardDuplicates('runn', cards), { exact: null, related: [] });
   });
+  it('кілька варіантів у полі через кому і / — порівнюється з кожним', () => {
+    const forms = [
+      card('p', 'purpose', { adj: 'purposeful, purposeless, all-purpose / multi-purpose, dual-purpose' }),
+      card('f', 'force', { adj: 'forced / forceful' }),
+      card('g', 'grab', { adj: 'grabbing, grabbed' }),
+    ];
+    assert.deepEqual(findCardDuplicates('multi-purpose', forms).related, [
+      { id: 'p', name: 'purpose', fields: ['adj'] },
+    ]);
+    assert.deepEqual(
+      findCardDuplicates('All-Purpose', forms).related.map((c) => c.id),
+      ['p'],
+    );
+    assert.deepEqual(
+      findCardDuplicates('dual-purpose', forms).related.map((c) => c.id),
+      ['p'],
+    );
+    assert.deepEqual(
+      findCardDuplicates('forceful', forms).related.map((c) => c.id),
+      ['f'],
+    );
+    assert.deepEqual(
+      findCardDuplicates('grabbed', forms).related.map((c) => c.id),
+      ['g'],
+    );
+    assert.deepEqual(findCardDuplicates('multi', forms), { exact: null, related: [] });
+  });
+  it('excludeId: картка, яку редагують, не дублікат сама собі', () => {
+    const forms = [card('p', 'purpose', { adj: 'multi-purpose' }), card('q', 'Purpose')];
+    assert.deepEqual(findCardDuplicates('multi-purpose', forms, 'p'), { exact: null, related: [] });
+    assert.deepEqual(findCardDuplicates('purpose', forms, 'p').exact, { id: 'q', name: 'Purpose' });
+  });
+  it('isCardNameChanged: регістр, пробіли і «to» — не зміна', () => {
+    assert.equal(isCardNameChanged('run', ' To RUN '), false);
+    assert.equal(isCardNameChanged('run', 'runner'), true);
+  });
   it('токени форм: роздільники, дужки, частки', () => {
     assert.deepEqual(wordFormTokens('quickly; (informal) quick'), ['quickly', 'quick']);
     assert.deepEqual(wordFormTokens('to run / a runner'), ['run', 'runner']);
+  });
+});
+
+describe('findDuplicatesForWords', () => {
+  const forms = [
+    card('p', 'purpose', { adj: 'purposeful, all-purpose / multi-purpose' }),
+    card('r', 'run', { n: 'runner' }),
+  ];
+  it('лише слова зі збігами, у порядку запиту; повтори — один раз', () => {
+    assert.deepEqual(findDuplicatesForWords(['walk', 'Multi-Purpose', 'run', 'multi-purpose', '  '], forms), [
+      {
+        word: 'Multi-Purpose',
+        exact: null,
+        related: [{ id: 'p', name: 'purpose', fields: ['adj'] }],
+      },
+      { word: 'run', exact: { id: 'r', name: 'run' }, related: [] },
+    ]);
+  });
+  it('нічого не знайдено — порожній список', () => {
+    assert.deepEqual(findDuplicatesForWords(['walk', 'jump'], forms), []);
   });
 });
 

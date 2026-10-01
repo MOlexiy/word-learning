@@ -6,6 +6,7 @@ import {
   type CardInput,
   type CardWordForms,
   type DraftInput,
+  normalizeCardName,
   type RandomProgress,
   searchCards,
   type WordCardSummary,
@@ -62,6 +63,10 @@ export class PrismaCardsRepository extends CardsRepository {
       select: WORD_FORMS_SELECT,
       orderBy: { name: 'asc' },
     });
+  }
+
+  listWordForms(userId: string): Promise<CardWordForms[]> {
+    return this.prisma.wordCard.findMany({ where: { userId }, select: WORD_FORMS_SELECT });
   }
 
   findById(id: string): Promise<CardRecord | null> {
@@ -162,8 +167,14 @@ export class PrismaCardsRepository extends CardsRepository {
         p ? [{ cardId: id, repetitionStep: p.n, lockedUntil: new Date(p.lockedUntil) }] : [],
       );
       if (progress.length) await tx.cardRandomProgress.createMany({ data: progress });
-      if (drafts.length) await tx.wordDraft.createMany({ data: drafts.map((d) => ({ ...d, userId })) });
-      return { cards: rows.length, drafts: drafts.length };
+      // Слова, які вже є в чернетці акаунта, пропускаються (унікальний word_key).
+      const imported = drafts.length
+        ? await tx.wordDraft.createMany({
+            data: drafts.map((d) => ({ ...d, userId, wordKey: normalizeCardName(d.word) })),
+            skipDuplicates: true,
+          })
+        : { count: 0 };
+      return { cards: rows.length, drafts: imported.count };
     });
   }
 }

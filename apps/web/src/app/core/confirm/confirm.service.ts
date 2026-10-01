@@ -13,6 +13,8 @@ export interface ConfirmOptions {
   confirmKey?: string;
   /** i18n-ключ кнопки відмови (за замовчуванням «Скасувати»). */
   cancelKey?: string;
+  /** i18n-ключ третьої кнопки (між відмовою і підтвердженням) — лише для `choose()`. */
+  altKey?: string;
   /** Посилання, що відкриваються в новій вкладці (напр. схожі картки). Тексти — як є. */
   links?: readonly ConfirmLink[];
   /** Небезпечна дія: червона кнопка підтвердження. */
@@ -26,30 +28,39 @@ export interface ConfirmLink {
   href: string;
 }
 
+/** `cancel` — також Esc і клік поза вікном. */
+export type ConfirmChoice = 'confirm' | 'alt' | 'cancel';
+
 interface PendingConfirm extends ConfirmOptions {
-  resolve: (confirmed: boolean) => void;
+  resolve: (choice: ConfirmChoice) => void;
 }
 
 /**
  * Спливаюче вікно підтвердження: `await confirm.ask({...})` → true (кнопка підтвердження) або false
- * (кнопка відмови, Esc, клік поза вікном). Одночасно відкрите лише одне вікно.
+ * (кнопка відмови, Esc, клік поза вікном). `choose({ ..., altKey })` — те саме з третьою кнопкою.
+ * Одночасно відкрите лише одне вікно.
  */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
   readonly #pending = signal<PendingConfirm | null>(null);
   readonly pending = this.#pending.asReadonly();
 
-  ask(options: ConfirmOptions): Promise<boolean> {
-    this.#pending()?.resolve(false);
-    return new Promise<boolean>((resolve) =>
+  async ask(options: Omit<ConfirmOptions, 'altKey'>): Promise<boolean> {
+    return (await this.choose(options)) === 'confirm';
+  }
+
+  choose(options: ConfirmOptions): Promise<ConfirmChoice> {
+    this.#pending()?.resolve('cancel');
+    return new Promise<ConfirmChoice>((resolve) =>
       this.#pending.set({ confirmKey: 'confirm.delete', cancelKey: 'confirm.cancel', ...options, resolve }),
     );
   }
 
-  settle(confirmed: boolean): void {
+  /** `true` / `false` — підтвердження / відмова (як раніше). */
+  settle(choice: ConfirmChoice | boolean): void {
     const pending = this.#pending();
     if (!pending) return;
     this.#pending.set(null);
-    pending.resolve(confirmed);
+    pending.resolve(choice === true ? 'confirm' : choice === false ? 'cancel' : choice);
   }
 }

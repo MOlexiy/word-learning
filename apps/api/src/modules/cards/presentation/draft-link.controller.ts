@@ -74,6 +74,8 @@ function texts(lang: string) {
         lang: 'uk',
         title: 'WordLoop — чернетка',
         added: (w: string) => `«${w}» додано в чернетку`,
+        addedRelated: (w: string, cards: string) =>
+          `«${w}» додано в чернетку, але воно вже є у формах слова: ${cards}. Перевірте під час заповнення — зайве можна прибрати.`,
         inDraft: (w: string) => `«${w}» уже є в чернетці`,
         hasCard: (w: string) => `Картка «${w}» уже існує`,
         invalidLink: 'Посилання недійсне — скопіюйте нове в кабінеті WordLoop.',
@@ -85,6 +87,8 @@ function texts(lang: string) {
         lang: 'en',
         title: 'WordLoop — inbox',
         added: (w: string) => `“${w}” added to your inbox`,
+        addedRelated: (w: string, cards: string) =>
+          `“${w}” added to your inbox, but it's already a word form on: ${cards}. Check it when filling in the card — you can remove it then.`,
         inDraft: (w: string) => `“${w}” is already in your inbox`,
         hasCard: (w: string) => `The card “${w}” already exists`,
         invalidLink: 'This link is no longer valid — copy a new one in your WordLoop profile.',
@@ -96,6 +100,11 @@ function texts(lang: string) {
 
 function resultMessage(result: AddDraftsResult, t: Texts): string {
   const [created] = result.created;
+  const related = result.related.find((r) => r.word === created?.word);
+  if (created && related) {
+    const cards = related.related.map((card) => `${card.name} (${card.fields.join(', ')})`).join('; ');
+    return t.addedRelated(created.word, cards);
+  }
   if (created) return t.added(created.word);
   const [skipped] = result.skipped;
   return skipped?.reason === 'card' ? t.hasCard(skipped.word) : t.inDraft(skipped?.word ?? '');

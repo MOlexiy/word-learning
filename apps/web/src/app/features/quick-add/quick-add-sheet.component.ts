@@ -16,15 +16,19 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import {
   type AddDraftsResult,
+  type CardWordDuplicates,
   DRAFT_MEANING_MAX,
   DRAFTS_PER_REQUEST_MAX,
   type DraftInput,
+  normalizeCardName,
   parseBulkDrafts,
   type SkippedDraft,
 } from '@wl/shared';
 import { ErrorTranslator } from '../../core/i18n/error-translator.service';
 import { NotifyService } from '../../core/notify/notify.service';
+import { CardStorageService } from '../cards/data/card-storage.service';
 import { DraftsStore } from '../cards/data/drafts.store';
+import { type CardLink, CardDuplicatePrompts } from '../cards/ui/card-duplicate-prompts.service';
 import { ProfileApi } from '../profile/profile.api';
 import { type QuickAddTarget, QuickAddService } from './quick-add.service';
 
@@ -43,6 +47,8 @@ interface SkipNotice {
  *  - Списком: кілька слів через кому / з нового рядка, «слово - значення»;
  *  - Повна картка: перехід до повної форми з уже введеним словом.
  * Для вчителя на сторінці учня слово потрапляє в чернетку учня.
+ * Перед збереженням слова перевіряються по картках (власних чи учня): назва наявної картки —
+ * не додаємо; слово серед n / v / adj / adv інших карток — перепитуємо (для списку — одним вікном).
  */
 @Component({
   selector: 'wl-quick-add-sheet',
@@ -204,6 +210,8 @@ interface SkipNotice {
 export class QuickAddSheetComponent {
   protected readonly quickAdd = inject(QuickAddService);
   readonly #drafts = inject(DraftsStore);
+  readonly #cards = inject(CardStorageService);
+  readonly #duplicates = inject(CardDuplicatePrompts);
   readonly #profileApi = inject(ProfileApi);
   readonly #router = inject(Router);
   readonly #notify = inject(NotifyService);
@@ -276,6 +284,7 @@ export class QuickAddSheetComponent {
       this.#focus();
       return;
     }
+    if (!(await this.#passesDuplicateCheck(target, word.trim()))) return;
     const result = await this.#save(target, [{ word: word.trim(), meaning: meaning.trim() }]);
     if (!result) return;
 
@@ -297,10 +306,16 @@ export class QuickAddSheetComponent {
     const target = this.target();
     const items = this.bulkItems();
     if (!target || this.busy() || !items.length || this.tooMany()) return;
-    const result = await this.#save(target, items);
+    const picked = await this.#pickBulkItems(target, items);
+    if (!picked) return;
+    if (!picked.items.length) {
+      this.notice.set({ key: 'quickAdd.bulkNothingNew', word: picked.declined.join(', '), link: null });
+      return;
+    }
+    const result = await this.#save(target, picked.items);
     if (!result) return;
 
-    const skippedWords = result.skipped.map((s) => s.word).join(', ');
+    const skippedWords = [...result.skipped.map((s) => s.word), ...picked.declined].join(', ');
     if (!result.created.length) {
       this.notice.set({ key: 'quickAdd.bulkNothingNew', word: skippedWords, link: null });
       return;
@@ -317,6 +332,75 @@ export class QuickAddSheetComponent {
   /** Клік по затемненому фону (поза вмістом) = закрити. */
   protected onBackdropClick(event: MouseEvent): void {
     if (event.target === this.dialog().nativeElement) this.close();
+  }
+
+  /**
+   * true — можна додавати. Картка з такою назвою вже є — підказка з посиланням (не додаємо);
+   * слово записане у формах інших карток — питаємо, чи все одно додати.
+   */
+  async #passesDuplicateCheck(target: QuickAddTarget, word: string): Promise<boolean> {
+    this.busy.set(true);
+    try {
+      const [found] = await this.#findDuplicates(target, [word]);
+      if (!found) return true;
+      const cardLink = this.#cardLink(target);
+      if (found.exact) {
+        const link = cardLink(found.exact.id);
+        this.notice.set({ key: 'quickAdd.skippedCard', word: found.exact.name, link });
+        return false;
+      }
+      return await this.#duplicates.confirmRelated(word, found.related, 'draft', cardLink);
+    } catch (error: unknown) {
+      this.#notify.error(this.#errors.message(error));
+      return false;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /**
+   * Список: слова з точною назвою картки сервер і так пропустить, тож питаємо лише про ті, що є
+   * у формах інших карток — одним вікном. null — скасовано (або помилка перевірки).
+   */
+  async #pickBulkItems(
+    target: QuickAddTarget,
+    items: DraftInput[],
+  ): Promise<{ items: DraftInput[]; declined: string[] } | null> {
+    this.busy.set(true);
+    try {
+      const found = await this.#findDuplicates(
+        target,
+        items.map((item) => item.word),
+      );
+      const related = found.filter((item) => !item.exact && item.related.length);
+      if (!related.length) return { items, declined: [] };
+      const choice = await this.#duplicates.chooseForList(related, this.#cardLink(target));
+      if (choice === 'cancel') return null;
+      if (choice === 'all') return { items, declined: [] };
+      const declined = new Set(related.map((item) => normalizeCardName(item.word)));
+      return {
+        items: items.filter((item) => !declined.has(normalizeCardName(item.word))),
+        declined: related.map((item) => item.word),
+      };
+    } catch (error: unknown) {
+      this.#notify.error(this.#errors.message(error));
+      return null;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** Збіги серед карток власника чернетки: свої або (для вчителя) учня. */
+  async #findDuplicates(target: QuickAddTarget, words: string[]): Promise<CardWordDuplicates[]> {
+    if (target.kind === 'self') return this.#cards.checkDuplicatesMany(words);
+    const result = await firstValueFrom(this.#profileApi.checkStudentDuplicates(target.username, words));
+    return result.items;
+  }
+
+  #cardLink(target: QuickAddTarget): CardLink {
+    if (target.kind === 'self') return (id) => ['/cards', id];
+    const { username } = target;
+    return (id) => ['/students', username, 'cards', id];
   }
 
   async #save(target: QuickAddTarget, items: DraftInput[]): Promise<AddDraftsResult | null> {
@@ -352,11 +436,8 @@ export class QuickAddSheetComponent {
   #skipNotice(target: QuickAddTarget, skipped: SkippedDraft | undefined): SkipNotice | null {
     if (!skipped) return null;
     if (skipped.reason === 'draft') return { key: 'quickAdd.skippedDraft', word: skipped.word, link: null };
-    const link =
-      target.kind === 'self'
-        ? ['/cards', skipped.cardId ?? '']
-        : ['/students', target.username, 'cards', skipped.cardId ?? ''];
-    return { key: 'quickAdd.skippedCard', word: skipped.word, link: skipped.cardId ? link : null };
+    const link = skipped.cardId ? this.#cardLink(target)(skipped.cardId) : null;
+    return { key: 'quickAdd.skippedCard', word: skipped.word, link };
   }
 
   #resetAll(): void {

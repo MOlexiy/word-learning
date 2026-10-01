@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import type {
   CardDuplicateCheck,
+  CardDuplicatesBatchResult,
   ImportCardsResult,
   RandomPickResult,
   WordCard,
@@ -25,6 +26,7 @@ import { CardsService } from '../application/cards.service';
 import { RandomCardService } from '../application/random-card.service';
 import {
   AddTopicDto,
+  CardDuplicatesBatchDto,
   CardDuplicatesQueryDto,
   CardInputDto,
   CardSearchQueryDto,
@@ -49,13 +51,26 @@ export class CardsController {
     return this.cards.list(user.username, query.q);
   }
 
-  /** Перевірка перед створенням: чи є картка з такою назвою або з таким словом у формах. */
+  /**
+   * Перевірка перед створенням / перейменуванням: чи є картка з такою назвою або з таким словом
+   * у формах. `excludeId` — картка, яку редагують.
+   */
   @Get('duplicates')
   duplicates(
     @CurrentUser() user: AuthUser,
     @Query() query: CardDuplicatesQueryDto,
   ): Promise<CardDuplicateCheck> {
-    return this.cards.checkDuplicates(user.username, query.name);
+    return this.cards.checkDuplicates(user.username, query.name, query.excludeId);
+  }
+
+  /** Те саме для списку слів перед додаванням у чернетку; у відповіді лише слова зі збігами. */
+  @Post('duplicates')
+  @HttpCode(HttpStatus.OK)
+  duplicatesMany(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CardDuplicatesBatchDto,
+  ): Promise<CardDuplicatesBatchResult> {
+    return this.cards.checkDuplicatesMany(user.username, dto.names);
   }
 
   /** `?fromDraft=<id>` — картка з чернетки: чернетка зникає разом зі створенням картки. */

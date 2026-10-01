@@ -33,6 +33,8 @@ export abstract class CardsRepository {
   abstract search(userId: string, q: string): Promise<WordCardSummary[]>;
   /** Картки, де `word` трапляється в назві чи формах слова — кандидати для перевірки дублікатів. */
   abstract findWordFormCandidates(userId: string, word: string): Promise<CardWordForms[]>;
+  /** Назви й форми всіх карток — для перевірки цілого списку слів за один запит. */
+  abstract listWordForms(userId: string): Promise<CardWordForms[]>;
   abstract findById(id: string): Promise<CardRecord | null>;
   /** `fromDraftId` — чернетка власника, яка видаляється в тій самій транзакції. */
   abstract create(userId: string, input: CardInput, fromDraftId?: string): Promise<CardRecord>;

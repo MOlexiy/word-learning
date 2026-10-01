@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
 import type {
   AddDraftsResult,
+  CardDuplicatesBatchResult,
   DraftInput,
   DraftLink,
   StudentSummary,
@@ -71,6 +72,14 @@ export class ProfileApi {
   }
 
   /** «Швидке слово» для учня: з'явиться в його чернетці з позначкою «від вчителя». */
+  /** Чи є слова вже серед карток учня (назви чи форми n / v / adj / adv). */
+  checkStudentDuplicates(username: string, names: string[]): Observable<CardDuplicatesBatchResult> {
+    return this.#http.post<CardDuplicatesBatchResult>(
+      `/api/teacher/students/${encodeURIComponent(username)}/cards/duplicates`,
+      { names },
+    );
+  }
+
   addStudentDrafts(username: string, items: DraftInput[]): Observable<AddDraftsResult> {
     return this.#http.post<AddDraftsResult>(`/api/teacher/students/${encodeURIComponent(username)}/drafts`, {
       items,

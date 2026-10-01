@@ -2,6 +2,7 @@ import { computed, inject, Injectable } from '@angular/core';
 import type {
   CardDuplicateCheck,
   CardImage,
+  CardWordDuplicates,
   CardInput,
   RandomPickResult,
   WordCard,
@@ -33,8 +34,12 @@ export class CardStorageService implements CardsRepository {
     return this.#repo().list(q);
   }
 
-  checkDuplicates(name: string): Promise<CardDuplicateCheck> {
-    return this.#repo().checkDuplicates(name);
+  checkDuplicates(name: string, excludeId?: string): Promise<CardDuplicateCheck> {
+    return this.#repo().checkDuplicates(name, excludeId);
+  }
+
+  checkDuplicatesMany(names: string[]): Promise<CardWordDuplicates[]> {
+    return this.#repo().checkDuplicatesMany(names);
   }
 
   get(id: string): Promise<WordCard> {

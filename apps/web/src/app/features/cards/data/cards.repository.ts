@@ -1,6 +1,7 @@
 import type {
   CardDuplicateCheck,
   CardImage,
+  CardWordDuplicates,
   CardInput,
   RandomPickResult,
   WordCard,
@@ -20,10 +21,16 @@ export interface CardsRepository {
   get(id: string): Promise<WordCard>;
   /** Відкриття детальної сторінки: k + 1. */
   view(id: string): Promise<WordCard>;
-  /** Чи є картка з такою назвою (`exact`) або з цим словом у формах інших карток (`related`). */
-  checkDuplicates(name: string): Promise<CardDuplicateCheck>;
+  /**
+   * Чи є картка з такою назвою (`exact`) або з цим словом у формах інших карток (`related`).
+   * `excludeId` — картка, яку редагують.
+   */
+  checkDuplicates(name: string, excludeId?: string): Promise<CardDuplicateCheck>;
+  /** Те саме для списку слів одним запитом; лише слова зі збігами. */
+  checkDuplicatesMany(names: string[]): Promise<CardWordDuplicates[]>;
   /** Картку з назвою, що вже є, не створює: CardExistsError. */
   create(input: CardInput, options?: CreateCardOptions): Promise<WordCard>;
+  /** Перейменування на назву іншої картки: CardExistsError. */
   update(id: string, input: CardInput): Promise<WordCard>;
   addTopic(id: string, text: string): Promise<WordCard>;
   /** Видаляє параграф `index`, якщо його текст досі `text` (інакше — помилка TOPIC_CHANGED). */

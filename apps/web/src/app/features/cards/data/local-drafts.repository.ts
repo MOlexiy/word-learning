@@ -5,6 +5,7 @@ import {
   addDraftsSchema,
   type DraftInput,
   draftInputSchema,
+  type DraftRelated,
   normalizeCardName,
   type SkippedDraft,
   type WordDraft,
@@ -36,26 +37,29 @@ export class LocalDraftsRepository implements DraftsRepository {
     const { items } = addDraftsSchema.parse({ items: rawItems });
     const drafts = this.#read();
     const draftWords = new Set(drafts.map((d) => normalizeCardName(d.word)));
-    const cardIds = new Map((await this.#cards.list()).map((c) => [normalizeCardName(c.name), c.id]));
+    const found = await this.#cards.checkDuplicatesMany(items.map((item) => item.word));
+    const duplicates = new Map(found.map((item) => [normalizeCardName(item.word), item]));
 
     const created: WordDraft[] = [];
     const skipped: SkippedDraft[] = [];
+    const related: DraftRelated[] = [];
     const base = Date.now();
     for (const item of items) {
       const key = normalizeCardName(item.word);
-      const cardId = cardIds.get(key);
-      if (cardId) {
-        skipped.push({ word: item.word, reason: 'card', cardId });
+      const duplicate = duplicates.get(key);
+      if (duplicate?.exact) {
+        skipped.push({ word: item.word, reason: 'card', cardId: duplicate.exact.id });
       } else if (draftWords.has(key)) {
         skipped.push({ word: item.word, reason: 'draft' });
       } else {
         draftWords.add(key);
         const createdAt = new Date(base + created.length).toISOString();
         created.unshift({ ...item, id: newId(), addedBy: null, createdAt });
+        if (duplicate?.related.length) related.push({ word: item.word, related: duplicate.related });
       }
     }
     if (created.length) this.#write([...created, ...drafts]);
-    return { created, skipped };
+    return { created, skipped, related };
   }
 
   async remove(id: string): Promise<void> {

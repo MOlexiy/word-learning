@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { REPETITION_MAX_STEP, REPETITION_MIN_STEP } from '../spaced-repetition';
 import { CARD_SEARCH_MAX_LENGTH } from '../card-search';
 import { type CardImage, cardImageSchema } from './card-image.schema';
-import { draftInputSchema } from './draft.schema';
+import { DRAFTS_PER_REQUEST_MAX, draftInputSchema } from './draft.schema';
 
 const optionalText = (max: number) => z.string().trim().max(max).default('');
 
@@ -92,10 +92,20 @@ export const cardSearchQuerySchema = z.object({
   q: z.string().trim().max(CARD_SEARCH_MAX_LENGTH).catch('').default(''),
 });
 
-/** GET /cards/duplicates?name=run */
+/** GET /cards/duplicates?name=run[&excludeId=<id картки, яку редагують>] */
 export const cardDuplicatesQuerySchema = z.object({
   name: z.string().trim().min(1, 'validation.nameRequired').max(200),
+  excludeId: z.uuid().optional(),
 });
+
+/** POST /cards/duplicates — перевірка списку слів (Bulk Add / швидке слово) одним запитом. */
+export const cardDuplicatesBatchSchema = z.object({
+  names: z
+    .array(z.string().trim().min(1, 'validation.nameRequired').max(200))
+    .min(1, 'validation.nameRequired')
+    .max(DRAFTS_PER_REQUEST_MAX),
+});
+export type CardDuplicatesBatchRequest = z.infer<typeof cardDuplicatesBatchSchema>;
 
 /** POST /cards?fromDraft=<id> — картка з чернетки: чернетка видаляється в тій самій транзакції. */
 export const createCardQuerySchema = z.object({

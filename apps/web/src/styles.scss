@@ -361,6 +361,23 @@ a {
   background: var(--accent);
   list-style: none;
 }
+/* Слово з чернетки вже є серед карток (сторінка нової картки). */
+.draft-duplicates {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.draft-duplicates p,
+.draft-duplicates ul {
+  margin: 0;
+}
+.draft-duplicates ul {
+  padding-left: 18px;
+  list-style: disc;
+}
+.draft-duplicates .btn {
+  justify-self: start;
+}
 .alert--error {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   color: var(--danger);

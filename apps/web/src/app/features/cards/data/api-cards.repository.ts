@@ -4,7 +4,9 @@ import { firstValueFrom, type Observable } from 'rxjs';
 import {
   type ApiErrorBody,
   type CardDuplicateCheck,
+  type CardDuplicatesBatchResult,
   type CardImage,
+  type CardWordDuplicates,
   type CardInput,
   type ImportCardsRequest,
   type ImportCardsResult,
@@ -27,6 +29,13 @@ export function searchParams(q?: string): HttpParams {
   return query ? new HttpParams().set('q', query) : new HttpParams();
 }
 
+/** 409 CARD_EXISTS → CardExistsError з id наявної картки. */
+function toCardExistsError(error: unknown, name: string): CardExistsError | null {
+  const body = error instanceof HttpErrorResponse ? (error.error as Partial<ApiErrorBody> | null) : null;
+  if (body?.code !== 'CARD_EXISTS' || !body.meta?.['cardId']) return null;
+  return new CardExistsError(body.meta['cardId'], body.meta['name'] ?? name);
+}
+
 /** Авторизований режим: картки та прогрес рандому — у БД через REST API. */
 @Injectable({ providedIn: 'root' })
 export class ApiCardsRepository implements CardsRepository {
@@ -36,8 +45,16 @@ export class ApiCardsRepository implements CardsRepository {
     return firstValueFrom(this.#http.get<WordCardSummary[]>(BASE, { params: searchParams(q) }));
   }
 
-  checkDuplicates(name: string): Promise<CardDuplicateCheck> {
-    return firstValueFrom(this.#http.get<CardDuplicateCheck>(`${BASE}/duplicates`, { params: { name } }));
+  checkDuplicates(name: string, excludeId?: string): Promise<CardDuplicateCheck> {
+    const params: Record<string, string> = excludeId ? { name, excludeId } : { name };
+    return firstValueFrom(this.#http.get<CardDuplicateCheck>(`${BASE}/duplicates`, { params }));
+  }
+
+  async checkDuplicatesMany(names: string[]): Promise<CardWordDuplicates[]> {
+    const result = await firstValueFrom(
+      this.#http.post<CardDuplicatesBatchResult>(`${BASE}/duplicates`, { names }),
+    );
+    return result.items;
   }
 
   get(id: string): Promise<WordCard> {
@@ -53,16 +70,16 @@ export class ApiCardsRepository implements CardsRepository {
     try {
       return await firstValueFrom(this.#http.post<WordCard>(BASE, input, { params }));
     } catch (error: unknown) {
-      const body = error instanceof HttpErrorResponse ? (error.error as Partial<ApiErrorBody> | null) : null;
-      if (body?.code === 'CARD_EXISTS' && body.meta?.['cardId']) {
-        throw new CardExistsError(body.meta['cardId'], body.meta['name'] ?? input.name);
-      }
-      throw error;
+      throw toCardExistsError(error, input.name) ?? error;
     }
   }
 
-  update(id: string, input: CardInput): Promise<WordCard> {
-    return this.#byId(id, this.#http.put<WordCard>(`${BASE}/${id}`, input));
+  async update(id: string, input: CardInput): Promise<WordCard> {
+    try {
+      return await this.#byId(id, this.#http.put<WordCard>(`${BASE}/${id}`, input));
+    } catch (error: unknown) {
+      throw toCardExistsError(error, input.name) ?? error;
+    }
   }
 
   addTopic(id: string, text: string): Promise<WordCard> {

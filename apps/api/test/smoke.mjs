@@ -266,6 +266,48 @@ await check('дублікати: та сама назва → 409 CARD_EXISTS, �
   assert.equal((await student.call('GET', '/cards')).body.length, 3);
 });
 
+await check('дублікати при редагуванні: excludeId, перейменування на чужу назву → 409', async () => {
+  const self = await student.call('GET', `/cards/duplicates?name=apple&excludeId=${cardIds[0]}`);
+  assert.deepEqual(self.body, { exact: null, related: [] }, 'картка не дублікат сама собі');
+  const original = (await student.call('GET', `/cards/${cardIds[0]}`)).body;
+  const fields = ['means', 'used', 'n', 'v', 'adj', 'adv', 'collocations', 'topic'];
+  const input = Object.fromEntries(fields.map((key) => [key, original[key]]));
+  const rename = await student.call('PUT', `/cards/${cardIds[0]}`, { ...input, name: ' Banana ' });
+  assert.equal(rename.status, 409);
+  assert.equal(rename.body.code, 'CARD_EXISTS');
+  assert.equal(rename.body.meta.cardId, cardIds[1]);
+  const sameName = await student.call('PUT', `/cards/${cardIds[0]}`, { ...input, name: 'APPLE!' });
+  assert.equal(sameName.status, 200, 'зміна регістру назви — не дублікат');
+  assert.equal(sameName.body.name, 'APPLE!');
+  await student.call('PUT', `/cards/${cardIds[0]}`, { ...input, name: original.name });
+});
+
+await check('дублікати списком: POST /cards/duplicates (свої) і для вчителя (картки учня)', async () => {
+  const own = await student.call('POST', '/cards/duplicates', {
+    names: ['walk', 'apple', ' Banana ', 'APPLE'],
+  });
+  assert.equal(own.status, 200, JSON.stringify(own.body));
+  assert.deepEqual(own.body, {
+    items: [
+      { word: 'apple', exact: null, related: [{ id: cardIds[0], name: 'apple!', fields: ['v'] }] },
+      { word: 'Banana', exact: { id: cardIds[1], name: 'banana' }, related: [] },
+    ],
+  });
+  assert.equal((await student.call('POST', '/cards/duplicates', { names: [] })).status, 400);
+  const forTeacher = await teacher.call('POST', `/teacher/students/${S}/cards/duplicates`, {
+    names: ['apple'],
+  });
+  assert.equal(forTeacher.status, 200, JSON.stringify(forTeacher.body));
+  assert.deepEqual(
+    forTeacher.body.items.map((i) => i.related[0]?.id),
+    [cardIds[0]],
+  );
+  const asStudent = await student.call('POST', `/teacher/students/${S}/cards/duplicates`, {
+    names: ['apple'],
+  });
+  assert.equal(asStudent.status, 403);
+});
+
 await check('чернетка: швидке/масове додавання, пропуск повторів і наявних карток', async () => {
   const res = await student.call('POST', '/drafts', {
     items: [
@@ -283,6 +325,7 @@ await check('чернетка: швидке/масове додавання, п�
     { word: 'Cherry', reason: 'card', cardId: cardIds[2] },
     { word: 'SERENDIPITY', reason: 'draft' },
   ]);
+  assert.deepEqual(res.body.related, []);
   const empty = await student.call('POST', '/drafts', { items: [{ word: '   ' }] });
   assert.equal(empty.status, 400);
 });
@@ -347,6 +390,17 @@ await check('посилання «додати в чернетку» без вх
   const drafts = (await student.call('GET', '/drafts')).body;
   const added = drafts.filter((d) => d.word === 'Get over');
   assert.equal(added.length, 1);
+
+  // Читалка повторює запит, поки сервер прокидається: паралельні повтори — одне слово.
+  const burst = await Promise.all(Array.from({ length: 5 }, () => add(token, 'Tenacious')));
+  assert.ok(burst.every((r) => r.status === 200));
+  const afterBurst = (await student.call('GET', '/drafts')).body;
+  assert.equal(afterBurst.filter((d) => d.word === 'Tenacious').length, 1, 'без копій');
+
+  // Слово є у формах картки «apple!» (v): додається, але сторінка попереджає.
+  const relatedPage = await (await add(token, 'apple')).text();
+  assert.match(relatedPage, /apple!/);
+  assert.equal((await student.call('GET', '/drafts')).body.filter((d) => d.word === 'apple').length, 1);
 
   const fresh = (await student.call('POST', '/drafts/link')).body.token;
   assert.notEqual(fresh, token);

@@ -3,7 +3,10 @@ import { z } from 'zod';
 import {
   advanceProgress,
   type CardDuplicateCheck,
+  type CardWordDuplicates,
   findCardDuplicates,
+  findDuplicatesForWords,
+  isCardNameChanged,
   searchCards,
   type CardImage,
   cardImageSchema,
@@ -47,8 +50,12 @@ export class LocalCardsRepository implements CardsRepository {
     return searchCards(this.#readCards(), q).map(({ id, name }) => ({ id, name }));
   }
 
-  async checkDuplicates(name: string): Promise<CardDuplicateCheck> {
-    return findCardDuplicates(name, this.#readCards());
+  async checkDuplicates(name: string, excludeId?: string): Promise<CardDuplicateCheck> {
+    return findCardDuplicates(name, this.#readCards(), excludeId);
+  }
+
+  async checkDuplicatesMany(names: string[]): Promise<CardWordDuplicates[]> {
+    return findDuplicatesForWords(names, this.#readCards());
   }
 
   async get(id: string): Promise<WordCard> {
@@ -78,8 +85,15 @@ export class LocalCardsRepository implements CardsRepository {
     return card;
   }
 
+  /** Як на сервері: інша картка з новою назвою → CardExistsError (лише якщо назву змінено). */
   async update(id: string, input: CardInput): Promise<WordCard> {
-    return this.#mutate(id, (card) => ({ ...card, ...input }));
+    return this.#mutate(id, (card) => {
+      if (isCardNameChanged(card.name, input.name)) {
+        const { exact } = findCardDuplicates(input.name, this.#readCards(), id);
+        if (exact) throw new CardExistsError(exact.id, exact.name);
+      }
+      return { ...card, ...input };
+    });
   }
 
   async addTopic(id: string, text: string): Promise<WordCard> {
